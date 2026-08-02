@@ -1,0 +1,98 @@
+<?php
+
+return [
+
+    'nav' => 'Termine',
+    'title' => 'Termine',
+    'permission_view' => 'Termine ansehen',
+    'permission_manage' => 'Termine und Datumsangaben anlegen, bearbeiten und löschen',
+
+    'create_event' => 'Termin anlegen',
+    'edit' => 'Bearbeiten',
+    'view' => 'Ansehen',
+    'delete' => 'Löschen',
+    'delete_event' => 'Termin löschen',
+    'delete_event_confirm' => 'Mit dem Termin werden alle Datumsangaben gelöscht. Wer den Kalender abonniert hat, behält die bereits importierten Daten.',
+    'back_to_events' => 'Alle Termine',
+    'event_actions' => 'Aktionen',
+
+    'dates' => 'Datumsangaben',
+    'no_dates' => 'Für diesen Termin ist noch kein Datum eingetragen.',
+    'no_upcoming' => 'Kein kommendes Datum',
+    'add_date' => 'Datum zu :event hinzufügen',
+    'add_date_short' => 'Datum hinzufügen',
+    'all_day' => 'Ganztägig',
+    'cancelled' => 'Abgesagt',
+    'cancel_date' => 'Datum absagen',
+    'cancel_date_confirm' => 'Das Datum bleibt sichtbar und wird als abgesagt veröffentlicht, damit die Absage alle erreicht, die es bereits im Kalender haben.',
+    'delete_date' => 'Datum löschen',
+    'delete_date_confirm' => 'Beim Löschen verschwindet das Datum vollständig. Abonnenten behalten es im Kalender. Wenn es jemand schon haben könnte, lieber absagen.',
+    'download_ics' => 'ICS',
+    'calendar_feed' => 'Kalender-Feed',
+
+    'occurrence_cancelled_flash' => 'Datum abgesagt.',
+    'occurrence_deleted_flash' => 'Datum gelöscht.',
+
+    'tab_details' => 'Details',
+    'tab_settings' => 'Einstellungen',
+    'tab_date' => 'Datum',
+
+    'field_title' => 'Titel',
+    'field_slug' => 'Slug',
+    'field_slug_instructions' => 'Wird in URLs und im ICS-Dateinamen verwendet. Pro Brand eindeutig.',
+    'field_description' => 'Beschreibung',
+    'field_type' => 'Typ',
+    'field_status' => 'Status',
+    'field_visibility' => 'Sichtbarkeit',
+    'field_visibility_instructions' => 'Öffentliche Termine erscheinen im Kalender-Feed. Nicht gelistete sind nur über ihren Link erreichbar. Private verlassen das Control Panel nie.',
+    'field_timezone' => 'Zeitzone',
+    'field_timezone_instructions' => 'Die Zone, in der die Datumsangaben dieses Termins gelesen werden. Einzelne Daten können sie überschreiben.',
+
+    'field_starts_at' => 'Beginn',
+    'field_ends_at' => 'Ende',
+    'field_ends_at_instructions' => 'Optional. Leer lassen für ein offenes Ende.',
+    'field_all_day' => 'Ganztägig',
+    'field_all_day_instructions' => 'Uhrzeiten werden ignoriert, das Datum wird als ganzer Tag veröffentlicht.',
+    'field_occurrence_timezone' => 'Abweichende Zeitzone',
+    'field_occurrence_timezone_instructions' => 'Nur wenn dieses Datum in einer anderen Zone als der des Termins stattfindet.',
+    'field_occurrence_status' => 'Status',
+    'field_occurrence_status_instructions' => 'Wird über das Absagen gesetzt, damit eine Absage immer einen Grund und eine erhöhte Sequenz trägt.',
+
+    'section_location' => 'Ort',
+    'section_location_instructions' => 'Ein Veranstaltungsort, eine Online-URL oder beides. Mindestens eines ist erforderlich.',
+    'field_venue_name' => 'Veranstaltungsort',
+    'field_venue_address' => 'Adresse',
+    'field_venue_city' => 'Stadt',
+    'field_venue_country' => 'Land',
+    'field_online_url' => 'Online-URL',
+    'field_online_url_instructions' => 'Der Link, über den teilgenommen wird.',
+
+    'validation_needs_location' => 'Ein Datum braucht einen Veranstaltungsort oder eine Online-URL.',
+    'validation_ends_before_starts' => 'Das Ende kann nicht vor dem Beginn liegen.',
+
+    'filter_any' => 'Alle',
+    'filter_type' => 'Typ',
+    'filter_status' => 'Status',
+    'filter_visibility' => 'Sichtbarkeit',
+
+    'col_title' => 'Titel',
+    'col_type' => 'Typ',
+    'col_next' => 'Nächstes Datum',
+    'col_dates' => 'Daten',
+    'col_status' => 'Status',
+    'col_visibility' => 'Sichtbarkeit',
+
+    'status_draft' => 'Entwurf',
+    'status_published' => 'Veröffentlicht',
+    'visibility_public' => 'Öffentlich',
+    'visibility_unlisted' => 'Nicht gelistet',
+    'visibility_private' => 'Privat',
+    'occurrence_scheduled' => 'Geplant',
+    'occurrence_cancelled' => 'Abgesagt',
+
+    'empty_heading' => 'Termine, ihre Datumsangaben und ein Kalender-Feed zum Abonnieren.',
+    'empty_create_description' => 'Ein Termin, so viele Datumsangaben wie nötig. Die Beschreibung wird einmal geschrieben.',
+    'empty_docs_heading' => 'Dokumentation lesen',
+    'empty_docs_description' => 'Antlers-Tags, der ICS-Feed und die vier Domain-Events, auf die andere Addons hören können.',
+
+];
