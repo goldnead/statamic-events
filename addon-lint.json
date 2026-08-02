@@ -1,0 +1,55 @@
+{
+    "severity": {
+        "testing.addon-testcase": "minor",
+        "ui.page-width": "minor"
+    },
+
+    "_rationale": {
+        "testing.addon-testcase": [
+            "Downgraded, not disabled: it stays visible in every report.",
+
+            "Statamic\\Testing\\AddonTestCase cannot boot this addon. Its setUp() calls",
+            "Nav::shouldReceive('build'), which swaps the Nav facade for a strict Mockery mock; this",
+            "addon's bootAddon() then calls Nav::extend() and the mock throws",
+            "BadMethodCallException: Received Mockery_1_Statamic_CP_Navigation_Nav::extend(), but no",
+            "expectations were specified. Reproduced against statamic/cms v6.26.0 with a probe test",
+            "before this entry was written, at src/ServiceProvider.php:132 via :83. AddonTestCase also",
+            "never invokes bootAddon() itself, so the hand-rolled call in tests/TestCase.php would have",
+            "to stay either way.",
+
+            "The bed it would replace is not incidental. It runs the identical suite against real MySQL",
+            "via DB_DRIVER=mysql (phpunit.mysql.xml) — which caught a 276-character title on its first",
+            "run — turns on SQLite's foreign-key pragma so the cascade from events to event_occurrences",
+            "is actually enforced, pins app.timezone to a zone no test uses so a missing UTC conversion",
+            "cannot hide, and stubs Statamic's licensing Outpost so the suite does not need the network.",
+            "Moving to AddonTestCase means rebuilding all of that.",
+
+            "Worth revisiting when core stops mocking Nav in AddonTestCase::setUp()."
+        ],
+
+        "ui.page-width": [
+            "`max-w-5xl 3xl:max-w-6xl mx-auto` with `data-max-width-wrapper` is core's own narrow-page",
+            "variant for detail screens — pages/forms/Show.vue:61, pages/preferences/Edit.vue:14,",
+            "pages/utilities/Licensing.vue:19 — and it is documented as such in",
+            "standards/ui-vocabulary.md §2.3. The wrapper carries `data-max-width-wrapper`, so the",
+            "header's full-width toggle still applies. The listing page uses max-w-page.",
+
+            "The rule reads `max-w-` literally and cannot tell the two variants apart."
+        ],
+
+        "release.versioning": [
+            "Not suppressed, and must not be. The repository is deliberately untagged: publishing this",
+            "addon — Packagist name, Marketplace listing, first tag — is Adrian's decision, not the",
+            "building agent's. The rule is correct and has to keep firing until that decision is made.",
+            "Nothing here is a reason to silence it."
+        ],
+
+        "release.screenshots": [
+            "Not suppressed. Screenshots need the addon installed in the studio playground and a",
+            "browser, neither of which the machine this was built on could reach. They belong with the",
+            "Marketplace artwork on STATE/tasks/task-statamic-marketplace-assets.md."
+        ]
+    },
+
+    "disable": []
+}

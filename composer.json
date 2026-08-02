@@ -1,0 +1,99 @@
+{
+    "name": "goldnead/statamic-events",
+    "description": "Brand-scoped event and occurrence domain for Statamic: multi-date events, per-event timezones, venue or online location, ICS downloads and calendar feeds.",
+    "type": "statamic-addon",
+    "license": "MIT",
+    "keywords": [
+        "statamic",
+        "statamic-addon",
+        "events",
+        "calendar",
+        "ics",
+        "occurrences"
+    ],
+    "authors": [
+        {
+            "name": "Adrian Goldner",
+            "email": "info@adriangoldner.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/goldnead/statamic-events/issues",
+        "source": "https://github.com/goldnead/statamic-events"
+    },
+    "require": {
+        "php": "^8.2",
+        "goldnead/statamic-brand-context": "^1.0",
+        "laravel/framework": "^12.40|^13.0",
+        "statamic/cms": "^6.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.0|^4.0|^5.0",
+        "pestphp/pest-plugin-laravel": "^3.0|^4.0|^5.0"
+    },
+    "suggest": {
+        "goldnead/statamic-activity": "Records occurrence scheduling, rescheduling and cancellation into the activity ledger.",
+        "goldnead/statamic-automations": "Lets automations trigger on the four domain events this addon emits.",
+        "goldnead/statamic-notifications": "Groundwork for occurrence reminders (planned for v1.2)."
+    },
+    "autoload": {
+        "psr-4": {
+            "Goldnead\\Events\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Goldnead\\Events\\Tests\\": "tests/",
+            "Goldnead\\Events\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Events",
+            "slug": "events",
+            "description": "Brand-scoped events with multiple occurrences, timezones, venues and ICS feeds.",
+            "url": "https://github.com/goldnead/statamic-events",
+            "developer": "Adrian Goldner",
+            "developer-url": "https://gldnr.studio"
+        },
+        "laravel": {
+            "providers": [
+                "Goldnead\\Events\\ServiceProvider"
+            ],
+            "aliases": {
+                "Events": "Goldnead\\Events\\Facades\\Events"
+            }
+        }
+    },
+    "scripts": {
+        "test": [
+            "@php vendor/bin/pest"
+        ],
+        "test:mysql": [
+            "@php vendor/bin/pest -c phpunit.mysql.xml"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --test"
+        ],
+        "fix": [
+            "@php vendor/bin/pint"
+        ],
+        "analyse": [
+            "@php vendor/bin/phpstan analyse --memory-limit=1G"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "pixelfear/composer-dist-plugin": true,
+            "composer/installers": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
