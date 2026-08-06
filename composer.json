@@ -2,7 +2,7 @@
     "name": "goldnead/statamic-events",
     "description": "Brand-scoped event and occurrence domain for Statamic: multi-date events, per-event timezones, venue or online location, ICS downloads and calendar feeds.",
     "type": "statamic-addon",
-    "license": "MIT",
+    "license": "proprietary",
     "keywords": [
         "statamic",
         "statamic-addon",

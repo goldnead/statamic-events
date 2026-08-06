@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## Unreleased
+
+### Changed — the licence is now proprietary
+
+This is a paid Marketplace addon. `composer.json` declares `proprietary` and the
+licence file carries the commercial addon licence instead of MIT. Entitlement is
+enforced by the Statamic Marketplace, not by code in this package.
+
+Tags up to and including `v1.0.1` remain MIT. The change takes effect with the next
+release.
+
 ## [1.0.1] — 2026-08-05
 
 ### Fixed

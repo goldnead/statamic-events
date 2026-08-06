@@ -283,4 +283,4 @@ cascade from `events` to `event_occurrences` is one.
 
 ## License
 
-MIT. See [LICENSE.md](LICENSE.md).
+Commercial license. See [LICENSE.md](LICENSE.md).
