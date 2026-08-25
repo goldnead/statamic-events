@@ -6,6 +6,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [1.0.2] — 2026-08-25
+
+### Fixed
+
+- **"Add to calendar" answered 404 on every multi-brand installation.** The single-occurrence route
+  looked the row up through the brand scope, which fails closed — and a website visitor has no
+  brand: the Control Panel reads one from the session, nobody else has one. So the button on every
+  public page did nothing while the row sat right there in the table. No error, no log line, just a
+  link that led nowhere.
+
+  The UUID is the address, as this route has always promised. It is now resolved outside the scope,
+  and what decides whether an occurrence may be handed out is the visibility check, which is
+  unchanged: `private` and unpublished stay 404 (not 403 — a 403 confirms the id exists), `unlisted`
+  stays reachable by its link, which is what unlisted means. A uuid5 is not guessable.
+
+  Covered by `tests/Feature/CalendarLinkAcrossBrandsTest.php`. Worth noting why it took an outside
+  installation to find: `tests/TestCase.php` pins `brand-context.multi_brand` to `false`, and the
+  `enableMultiBrand()` helper it ships was never called anywhere in the suite. The case did not
+  exist, so it could not fail.
+
 ## [1.0.1] — 2026-08-05
 
 ### Fixed

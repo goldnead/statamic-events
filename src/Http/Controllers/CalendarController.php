@@ -31,7 +31,20 @@ class CalendarController extends Controller
      */
     public function occurrence(string $uuid): Response
     {
-        $occurrence = Occurrence::query()->with('event')->where('uuid', $uuid)->first();
+        // Deliberately outside the brand scope. The UUID *is* the address —
+        // that is what this route promises — and a visitor on a website has no
+        // brand: the Control Panel reads one from the session, nobody else has
+        // one. Scoped, every "add to calendar" button on a multi-brand
+        // installation answered 404 while the row sat right there.
+        //
+        // Nothing is given away by looking it up: a uuid5 is not guessable, and
+        // the visibility check below is what decides whether this occurrence may
+        // be handed out at all. `private` and unpublished stay 404.
+        $occurrence = Occurrence::query()
+            ->withoutGlobalScopes()
+            ->with(['event' => fn ($q) => $q->withoutGlobalScopes()])
+            ->where('uuid', $uuid)
+            ->first();
 
         abort_unless($occurrence && $occurrence->event?->isPubliclyReadable(), 404);
 
