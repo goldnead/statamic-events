@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
-## [1.0.2] — 2026-08-25
+## [2.0.1] — 2026-08-25
 
 ### Fixed
 
@@ -25,6 +25,17 @@ config keys and facade methods are part of the public API from the first release
   installation to find: `tests/TestCase.php` pins `brand-context.multi_brand` to `false`, and the
   `enableMultiBrand()` helper it ships was never called anywhere in the suite. The case did not
   exist, so it could not fail.
+
+## [2.0.0] — 2026-08-09
+
+### Changed — the licence is now proprietary
+
+This is a paid Marketplace addon. `composer.json` declares `proprietary` and the
+licence file carries the commercial addon licence instead of MIT. Entitlement is
+enforced by the Statamic Marketplace, not by code in this package.
+
+Tags up to and including `v1.0.1` remain MIT. The change takes effect with the next
+release.
 
 ## [1.0.1] — 2026-08-05
 
