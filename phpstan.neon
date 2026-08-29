@@ -21,4 +21,19 @@ parameters:
     excludePaths:
         - src/Bridges/ActivityBridge.php
 
+    # The metrics under src/Integrations/Insights implement the analytics
+    # addon's contract and extend its base class. That addon is a `suggest`, not
+    # a requirement, so it is not in vendor — and the files would otherwise be
+    # reported as a heap of unknown classes.
+    #
+    # Scanned from the test stand-ins rather than excluded like the bridge above:
+    # the stand-ins are the same declarations, byte for byte
+    # (InsightsContractsMatchTest holds them to that), so the metrics are
+    # analysed against the real signatures instead of not being analysed at all.
+    # Scanned, not analysed: the files themselves are not code this package
+    # ships.
+    scanFiles:
+        - tests/Fakes/insights-contracts.php
+        - tests/Fakes/insights-table-metric.php
+
     treatPhpDocTypesAsCertain: false

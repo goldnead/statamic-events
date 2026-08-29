@@ -90,6 +90,20 @@ return [
     'occurrence_scheduled' => 'Scheduled',
     'occurrence_cancelled' => 'Cancelled',
 
+    // The figures this addon offers the Insights dashboard, if that addon is
+    // installed. See src/Integrations/Insights/.
+    'metric_group' => 'Events',
+    'metric_published' => 'Published events',
+    'metric_published_description' => 'Events that became visible in this period. Drafts are not counted, because an event nobody can see has not happened yet.',
+    'metric_occurrences' => 'Dates',
+    'metric_occurrences_description' => 'Dates that fall in this period, cancelled ones included. Counted by when they take place, so the chart reaches into the future when the period does.',
+    'metric_cancelled' => 'Cancelled dates',
+    'metric_cancelled_description' => 'Dates called off in this period, counted on the day the cancellation went out rather than the day they would have been.',
+    'metric_breakdown_type' => 'Type',
+    'metric_breakdown_status' => 'Status',
+    'metric_no_type' => 'No type',
+    'metric_no_status' => 'No status',
+
     'empty_heading' => 'Events, their dates, and a calendar feed people can subscribe to.',
     'empty_create_description' => 'One event, as many dates as it has. The description is written once.',
     'empty_docs_heading' => 'Read the documentation',

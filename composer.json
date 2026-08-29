@@ -37,6 +37,7 @@
     "suggest": {
         "goldnead/statamic-activity": "Records occurrence scheduling, rescheduling and cancellation into the activity ledger.",
         "goldnead/statamic-automations": "Lets automations trigger on the four domain events this addon emits.",
+        "goldnead/statamic-insights": "Puts published events, the dates in a period and the cancellations on the Insights dashboard, split by type and status.",
         "goldnead/statamic-notifications": "Groundwork for occurrence reminders (planned for v1.2)."
     },
     "autoload": {

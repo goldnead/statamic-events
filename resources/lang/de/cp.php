@@ -90,6 +90,20 @@ return [
     'occurrence_scheduled' => 'Geplant',
     'occurrence_cancelled' => 'Abgesagt',
 
+    // Die Kennzahlen, die dieses Addon dem Insights-Dashboard anbietet, sofern
+    // jenes Addon installiert ist. Siehe src/Integrations/Insights/.
+    'metric_group' => 'Termine',
+    'metric_published' => 'Veröffentlichte Termine',
+    'metric_published_description' => 'Termine, die in diesem Zeitraum sichtbar wurden. Entwürfe zählen nicht, denn ein Termin, den niemand sehen kann, ist noch nichts geschehen.',
+    'metric_occurrences' => 'Datumsangaben',
+    'metric_occurrences_description' => 'Datumsangaben, die in diesen Zeitraum fallen, abgesagte eingeschlossen. Gezählt danach, wann sie stattfinden. Der Verlauf reicht deshalb in die Zukunft, wenn der Zeitraum es tut.',
+    'metric_cancelled' => 'Abgesagte Datumsangaben',
+    'metric_cancelled_description' => 'In diesem Zeitraum abgesagte Datumsangaben, gezählt am Tag der Absage und nicht am Tag, an dem sie stattgefunden hätten.',
+    'metric_breakdown_type' => 'Typ',
+    'metric_breakdown_status' => 'Status',
+    'metric_no_type' => 'Ohne Typ',
+    'metric_no_status' => 'Ohne Status',
+
     'empty_heading' => 'Termine, ihre Datumsangaben und ein Kalender-Feed zum Abonnieren.',
     'empty_create_description' => 'Ein Termin, so viele Datumsangaben wie nötig. Die Beschreibung wird einmal geschrieben.',
     'empty_docs_heading' => 'Dokumentation lesen',
