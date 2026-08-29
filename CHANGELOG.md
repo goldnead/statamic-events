@@ -6,6 +6,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [2.1.0] — 2026-08-29
+
+### Added: this addon's figures appear in Insights
+
+From 1.1.0 `statamic-insights` is no longer a revenue report but the family's reporting layer: an
+addon registers what it can count and gets the period, the comparison against the period before,
+the chart, the breakdowns and two finished screens in return.
+
+The coupling is optional in **both** directions. Without Insights nothing here is missing; without
+this addon only its own group is missing over there. `suggest`, never `require`.
+
+Every figure follows the contract's house rules: **null is not zero** (a rate with no denominator
+has no answer and does not print 0 %), `available()` decides existence and never the data, gaps in
+a series are filled by Insights rather than by the metric, and a filter a metric does not
+understand is ignored rather than fatal.
+
+Three figures: published events, occurrences, cancelled occurrences.
+
+**The occurrences are deliberately not clamped to now.** Insights' clamp is for figures answering
+what *has happened*; here next month is the point of the question, and a screen that hid it would be
+lying by omission.
+
+### Fixed: under Octane the metrics registered on the first request only
+
+The registration flag on the service provider was static. A static flag survives in the Octane
+worker while the application around it is rebuilt, so from the second request onwards the fresh
+registry never received the three figures. It is an instance flag now, the way its siblings have it.
+
+### Fixed: a figure counts the current brand only
+
+While the family was being wired up this question got four different answers, and side by side on
+one screen that is worse than none: one tile showed three other brands' turnover while its
+neighbour filtered correctly. The rule now lives once, in `TableMetric::brandScoped()`, transcribed
+from `BrandScope::apply()`; this package only names the column, and the figure, the chart and every
+breakdown narrow together.
+
+With no brand selected the tile reads **0 and stays**. A reader can make sense of a zero; a tile
+that is not there he cannot notice.
+
 ## [2.0.1] — 2026-08-25
 
 ### Fixed
