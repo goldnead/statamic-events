@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [2.1.1] — 2026-09-03
+
+### Fixed: delete moved out of the body and into the page header
+
+The delete button sat in the middle of the page body under the calendar feed: hard to find and
+easy to hit by accident. It is now a `DropdownItem variant="destructive"` in the header's `…`
+menu, which is where core puts a destructive page action.
+
+Three icon names that do not exist: `book-open-cover`, plus `globe` and `map-pin` inside a bound
+expression, where no literal grep finds them. An unknown name renders an empty box and warns
+about nothing.
+
 ## [2.1.0] — 2026-08-29
 
 ### Added: this addon's figures appear in Insights
