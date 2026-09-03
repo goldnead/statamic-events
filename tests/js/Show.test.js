@@ -90,9 +90,12 @@ describe('the event detail page', () => {
         // the wrong one.
         const wrapper = mount(Show, { props });
 
+        // Deleting the event moved out of the page body into the header's "…"
+        // menu, so it is a DropdownItem now. What the test guards is unchanged:
+        // cancelling a date and deleting the event must not share a modal.
         await wrapper
-            .findAll('[data-stub="Button"]')
-            .find((button) => button.text().includes('events::cp.delete_event'))
+            .findAll('[data-stub="DropdownItem"]')
+            .find((item) => item.text().includes('events::cp.delete_event'))
             .trigger('click');
 
         const modals = wrapper.findAll('[data-stub="ConfirmationModal"]');

@@ -54,7 +54,7 @@ function reload() {
                     :description="__('events::cp.empty_create_description')"
                 />
                 <EmptyStateItem
-                    icon="book-open-cover"
+                    icon="content-book-open"
                     :heading="__('events::cp.empty_docs_heading')"
                     :description="__('events::cp.empty_docs_description')"
                     href="https://github.com/goldnead/statamic-events#readme"

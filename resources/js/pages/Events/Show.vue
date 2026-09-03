@@ -10,6 +10,9 @@ import {
     ConfirmationModal,
     Description,
     DocsCallout,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
     Header,
     Heading,
     Icon,
@@ -66,6 +69,22 @@ function confirmDeleteEvent() {
         <Header :title="event.title" icon="calendar">
             <ButtonGroup role="group" :aria-label="__('events::cp.event_actions')">
                 <Button :href="indexUrl" :text="__('events::cp.back_to_events')" variant="ghost" />
+                <!-- Deleting the event used to be a `Button variant="danger"`
+                     halfway down the page, under the calendar feed. A
+                     destructive page action belongs in the header's "…" menu:
+                     core reserves `danger` for the confirm button inside a
+                     modal, and a delete buried in body copy is both hard to
+                     find and easy to hit by accident. -->
+                <Dropdown v-if="canManage">
+                    <DropdownMenu>
+                        <DropdownItem
+                            :text="__('events::cp.delete_event')"
+                            icon="trash"
+                            variant="destructive"
+                            @click="deletingEvent = true"
+                        />
+                    </DropdownMenu>
+                </Dropdown>
                 <CommandPaletteItem
                     v-if="canManage"
                     category="Actions"
@@ -146,7 +165,7 @@ function confirmDeleteEvent() {
                                 </div>
                                 <Description v-if="occurrence.location" class="mt-1">
                                     <Icon
-                                        :name="occurrence.online ? 'globe' : 'map-pin'"
+                                        :name="occurrence.online ? 'earth' : 'pin'"
                                         class="size-3.5 inline"
                                     />
                                     {{ occurrence.location }}
@@ -223,14 +242,6 @@ function confirmDeleteEvent() {
                         <a :href="feedUrl" class="break-all">{{ feedUrl }}</a>
                     </Description>
 
-                    <div v-if="canManage" class="mt-6">
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            :text="__('events::cp.delete_event')"
-                            @click="deletingEvent = true"
-                        />
-                    </div>
                 </Card>
             </Panel>
         </div>
