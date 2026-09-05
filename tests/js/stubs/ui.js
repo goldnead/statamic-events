@@ -110,10 +110,18 @@ export const CommandPaletteItem = {
 };
 
 /**
- * Server mode only, which is all this addon uses. The stub renders nothing but
- * records the props, because what a test here can meaningfully assert is that
- * the listing was fed correctly — no `preferences-prefix` means no saved views,
- * and a missing `url` means no listing at all.
+ * Both modes.
+ *
+ * In server mode (`url`) the stub renders nothing but records the props, because
+ * what a test can meaningfully assert there is that the listing was fed
+ * correctly — no `preferences-prefix` means no saved views, and a missing `url`
+ * means no listing at all.
+ *
+ * In client mode (`items`) it walks the rows and calls the `cell-<field>` slot
+ * for every column, plus `prepended-row-actions` once per row. That is the part
+ * worth imitating: a cell slot named after a field that no column carries
+ * renders nothing at all in the real component, without a warning, and a stub
+ * that only rendered its default slot would never notice.
  */
 export const Listing = {
     name: 'Listing',
@@ -127,12 +135,33 @@ export const Listing = {
         'sortColumn',
         'sortDirection',
         'actionUrl',
+        'allowBulkActions',
+        'allowSearch',
+        'allowPresets',
+        'allowCustomizingColumns',
         'pushQuery',
         'additionalParameters',
     ],
     emits: ['refreshing'],
     setup(props, { attrs, slots }) {
-        return () => h('div', { 'data-stub': 'Listing', ...attrs }, slots.default?.());
+        return () => {
+            if (!props.items) {
+                return h('div', { 'data-stub': 'Listing', ...attrs }, slots.default?.());
+            }
+
+            const rows = props.items.map((row) =>
+                h('tr', { 'data-stub': 'ListingRow' }, [
+                    ...(props.columns || []).map((column) =>
+                        h('td', { 'data-cell': column.field }, [
+                            slots[`cell-${column.field}`]?.({ row, value: row[column.field] }),
+                        ])
+                    ),
+                    h('td', { 'data-cell': 'actions' }, [slots['prepended-row-actions']?.({ row })]),
+                ])
+            );
+
+            return h('table', { 'data-stub': 'Listing', ...attrs }, [h('tbody', rows)]);
+        };
     },
 };
 

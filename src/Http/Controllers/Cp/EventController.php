@@ -3,8 +3,10 @@
 namespace Goldnead\Events\Http\Controllers\Cp;
 
 use Goldnead\Events\Enums\EventStatus;
+use Goldnead\Events\Enums\OccurrenceStatus;
 use Goldnead\Events\Enums\Visibility;
 use Goldnead\Events\Models\Event;
+use Goldnead\Events\Models\Occurrence;
 use Goldnead\Events\Query\Scopes\Filters\EventFilter;
 use Goldnead\Events\Support\Blueprints;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -118,24 +120,12 @@ class EventController extends Controller
                 'timezone' => $model->timezone,
                 'description' => $model->description,
             ],
-            'occurrences' => $model->occurrences->map(fn ($occurrence) => [
-                'id' => $occurrence->getKey(),
-                // Rendered in the date's own zone, never the viewer's: a date
-                // belongs at its place. The zone is shown alongside so nobody has
-                // to guess which one they are reading.
-                'starts_at' => $occurrence->localStart()->format($occurrence->all_day ? 'D, d M Y' : 'D, d M Y H:i'),
-                'ends_at' => $occurrence->localEnd()?->format($occurrence->all_day ? 'D, d M Y' : 'D, d M Y H:i'),
-                'timezone' => $occurrence->effectiveTimezone(),
-                'all_day' => $occurrence->all_day,
-                'status' => $occurrence->status->value,
-                'cancelled' => $occurrence->isCancelled(),
-                'location' => $occurrence->locationLine(),
-                'online' => $occurrence->isOnline(),
-                'ics_url' => route('statamic.events.occurrence', ['uuid' => $occurrence->uuid]),
-                'edit_url' => cp_route('events.occurrences.edit', ['occurrence' => $occurrence->getKey()]),
-                'cancel_url' => cp_route('events.occurrences.cancel', ['occurrence' => $occurrence->getKey()]),
-                'delete_url' => cp_route('events.occurrences.destroy', ['occurrence' => $occurrence->getKey()]),
-            ])->values()->all(),
+            'occurrences' => $model->occurrences->map(fn ($occurrence) => $this->occurrenceRow($occurrence))->values()->all(),
+            'occurrenceColumns' => collect($this->occurrenceColumns())->map->toArray()->all(),
+            // Row and bulk actions both post here. It is handed over even to a
+            // read-only user; the page decides whether to wire it up, and every
+            // action authorizes its own items regardless.
+            'occurrenceActionUrl' => cp_route('events.occurrences.actions.run'),
             'editUrl' => cp_route('events.edit', ['event' => $model->getKey()]),
             'deleteUrl' => cp_route('events.destroy', ['event' => $model->getKey()]),
             'indexUrl' => cp_route('events.index'),
@@ -309,6 +299,82 @@ class EventController extends Controller
             Column::make('status')->label(__('events::cp.col_status')),
             Column::make('visibility')->label(__('events::cp.col_visibility')),
         ];
+    }
+
+    /**
+     * The columns of the dates listing on an event's screen.
+     *
+     * Same helper as the index screen above, so the two tables cannot drift
+     * apart: core's `Column` is what carries the label, the sortable flag and
+     * the visibility into `<Listing>`. That listing runs in its client-side
+     * mode — an event's dates arrive complete as an Inertia prop, so there is
+     * nothing to page or re-fetch and no second route to build.
+     *
+     * @return array<int, Column>
+     */
+    private function occurrenceColumns(): array
+    {
+        return [
+            Column::make('starts_at')->label(__('events::cp.col_period')),
+            Column::make('timezone')->label(__('events::cp.col_timezone')),
+            Column::make('location')->label(__('events::cp.col_location')),
+            Column::make('status')->label(__('events::cp.col_status')),
+        ];
+    }
+
+    /**
+     * One row of that listing.
+     *
+     * The split between `starts_at` and `period_label` is what makes the column
+     * sort correctly: client-side sorting compares the raw field, and a value
+     * like "Tue, 15 Sep 2026" sorts alphabetically by weekday. The sortable
+     * value is therefore ISO and the readable one travels beside it — the same
+     * arrangement `status` and `status_label` already use on the index.
+     *
+     * @return array<string, mixed>
+     */
+    private function occurrenceRow(Occurrence $occurrence): array
+    {
+        return [
+            'id' => $occurrence->getKey(),
+            // Rendered in the date's own zone, never the viewer's: a date belongs
+            // at its place. The zone is a column of its own so nobody has to
+            // guess which one they are reading.
+            'starts_at' => $occurrence->localStart()->format('Y-m-d H:i'),
+            'ends_at' => $occurrence->localEnd()?->format('Y-m-d H:i'),
+            'period_label' => $this->period($occurrence),
+            'timezone' => $occurrence->effectiveTimezone(),
+            'all_day' => $occurrence->all_day,
+            'status' => $occurrence->status->value,
+            'status_label' => OccurrenceStatus::options()[$occurrence->status->value] ?? $occurrence->status->value,
+            'cancelled' => $occurrence->isCancelled(),
+            'location' => $occurrence->locationLine(),
+            'online' => $occurrence->isOnline(),
+            'ics_url' => route('statamic.events.occurrence', ['uuid' => $occurrence->uuid]),
+            'edit_url' => cp_route('events.occurrences.edit', ['occurrence' => $occurrence->getKey()]),
+        ];
+    }
+
+    /**
+     * The readable window.
+     *
+     * The end repeats the date only when it falls on another day. A two-hour
+     * evening reads as "Tue, 15 Sep 2026 19:00 – 21:30" rather than printing
+     * the same date twice, which in a table column costs exactly the width the
+     * location needs.
+     */
+    private function period(Occurrence $occurrence): string
+    {
+        $format = $occurrence->all_day ? 'D, d M Y' : 'D, d M Y H:i';
+
+        $start = $occurrence->localStart();
+        $end = $occurrence->localEnd();
+
+        if (! $end || ($occurrence->all_day && $end->isSameDay($start))) {
+            return $start->format($format);
+        }
+
+        return $start->format($format).' – '.$end->format($end->isSameDay($start) ? 'H:i' : $format);
     }
 
     /** @return array<string, mixed> */

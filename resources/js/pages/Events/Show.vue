@@ -13,9 +13,12 @@ import {
     Dropdown,
     DropdownItem,
     DropdownMenu,
+    EmptyStateItem,
+    EmptyStateMenu,
     Header,
     Heading,
     Icon,
+    Listing,
     Panel,
     PanelHeader,
     Subheading,
@@ -24,6 +27,8 @@ import {
 const props = defineProps({
     event: { type: Object, required: true },
     occurrences: { type: Array, default: () => [] },
+    occurrenceColumns: { type: Array, default: () => [] },
+    occurrenceActionUrl: { type: String, default: null },
     editUrl: { type: String, required: true },
     deleteUrl: { type: String, required: true },
     indexUrl: { type: String, required: true },
@@ -32,28 +37,16 @@ const props = defineProps({
     canManage: { type: Boolean, default: false },
 });
 
-// Two separate confirmations rather than one shared "pending action": a modal
-// that can mean either "delete this date" or "delete the whole event" is a modal
-// that will eventually mean the wrong one.
-const cancelling = ref(null);
-const deletingOccurrence = ref(null);
+// Only the event itself still confirms here. Cancelling and deleting a single
+// date used to have a hand-built modal each; they are core actions now
+// (Goldnead\Events\Actions\*), so their confirmation, their button text and
+// their toast come from the same place whether the editor picked one row or
+// checked five.
 const deletingEvent = ref(false);
 
 // Every mutation goes through the Inertia router, never axios: the router owns
 // the progress bar, the flash toast, the dirty-state guard and back-button
 // behaviour, and a bare axios call silently opts out of all four.
-function confirmCancel() {
-    if (!cancelling.value) return;
-    router.post(cancelling.value.cancel_url, {}, { preserveScroll: true });
-    cancelling.value = null;
-}
-
-function confirmDeleteOccurrence() {
-    if (!deletingOccurrence.value) return;
-    router.delete(deletingOccurrence.value.delete_url, { preserveScroll: true });
-    deletingOccurrence.value = null;
-}
-
 function confirmDeleteEvent() {
     router.delete(props.deleteUrl);
     deletingEvent.value = false;
@@ -63,9 +56,16 @@ function confirmDeleteEvent() {
 <template>
     <Head :title="[event.title, __('events::cp.title')]" />
 
-    <!-- Core's narrow variant for detail screens. data-max-width-wrapper keeps the
-         header's own full-width toggle working; a bare max-w-* ignores it. -->
-    <div class="max-w-5xl 3xl:max-w-6xl mx-auto" data-max-width-wrapper>
+    <!--
+        `max-w-page`, not core's narrower publish-form width. This screen carries
+        a table now, and a table is what decides the width it needs: measured in
+        the playground, the four columns plus the checkbox and the "…" menu want
+        729px and the narrow variant left 661 — the actions column was scrolled
+        out of sight, which is a "…" menu nobody can reach.
+        data-max-width-wrapper keeps the header's own full-width toggle working;
+        a bare max-w-* ignores it.
+    -->
+    <div class="max-w-page mx-auto" data-max-width-wrapper>
         <Header :title="event.title" icon="calendar">
             <ButtonGroup role="group" :aria-label="__('events::cp.event_actions')">
                 <Button :href="indexUrl" :text="__('events::cp.back_to_events')" variant="ghost" />
@@ -100,18 +100,23 @@ function confirmDeleteEvent() {
         </Header>
 
         <!--
-            The single-column grid utility is deliberately absent: a grid falls back
-            to one column on its own, and every addon shipping a Tailwind build emits
-            that same bare, breakpoint-less rule into the shared `addon-utilities`
-            layer. Media queries add no specificity, so the stylesheet that loads last
-            wins against this element's `lg:` variant. Do not name the class in a
-            comment either — Tailwind scans comments as candidates and would emit it.
-            `min-w-0` per panel rather than `*:min-w-0` on the container: this addon
-            ships no stylesheet of its own, so only utilities that Statamic core
-            already emits actually exist. Core has `min-w-0`; it has no child variant.
+            Stacked, not side by side, and that is a correction rather than a
+            preference. This addon ships no stylesheet of its own, so the only
+            utilities that exist are the ones Statamic core already emits — and
+            core emits neither of the two responsive grid classes the earlier
+            two-column layout was built on. Grepping the playground's built CSS
+            finds them in `statamic-marketing` and `statamic-clientrooms`: the
+            side-by-side arrangement only ever appeared because a sibling addon
+            happened to be installed, and a customer running this addon alone got
+            the stacked fallback anyway.
+
+            Stacking on purpose costs nothing here and buys the table the full
+            width, which is what the dates actually need: four columns plus the
+            checkbox and the "…" menu want 729px, and two thirds of a detail
+            screen was 661.
         -->
-        <div class="grid lg:grid-cols-3 gap-6">
-            <Panel class="min-w-0 lg:col-span-2 h-full flex flex-col">
+        <div>
+            <Panel class="min-w-0 flex flex-col">
                 <PanelHeader class="flex items-center justify-between min-h-10">
                     <Heading>{{ __('events::cp.dates') }}</Heading>
                     <Button
@@ -122,92 +127,108 @@ function confirmDeleteEvent() {
                     />
                 </PanelHeader>
 
-                <Card class="flex-1">
-                    <Description v-if="occurrences.length === 0">
-                        {{ __('events::cp.no_dates') }}
-                    </Description>
+                <EmptyStateMenu
+                    v-if="occurrences.length === 0"
+                    :heading="__('events::cp.no_dates')"
+                    class="flex-1"
+                >
+                    <EmptyStateItem
+                        v-if="canManage"
+                        :href="addOccurrenceUrl"
+                        icon="calendar"
+                        :heading="__('events::cp.add_date_short')"
+                        :description="__('events::cp.empty_dates_description')"
+                    />
+                </EmptyStateMenu>
 
-                    <ul v-else class="divide-y divide-content-border">
-                        <li
-                            v-for="occurrence in occurrences"
-                            :key="occurrence.id"
-                            class="py-3 flex flex-wrap items-start justify-between gap-3"
-                        >
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span
-                                        class="font-medium"
-                                        :class="occurrence.cancelled ? 'line-through text-gray-500' : ''"
-                                    >
-                                        {{ occurrence.starts_at }}
-                                        <template v-if="occurrence.ends_at">
-                                            – {{ occurrence.ends_at }}
-                                        </template>
-                                    </span>
-                                    <!-- The zone is always shown next to the time. A date
-                                         rendered in its own zone without saying which one
-                                         is a date the reader has to guess at. -->
-                                    <Badge size="sm" pill color="gray" :text="occurrence.timezone" />
-                                    <Badge
-                                        v-if="occurrence.all_day"
-                                        size="sm"
-                                        pill
-                                        color="gray"
-                                        :text="__('events::cp.all_day')"
-                                    />
-                                    <Badge
-                                        v-if="occurrence.cancelled"
-                                        size="sm"
-                                        pill
-                                        color="red"
-                                        :text="__('events::cp.cancelled')"
-                                    />
-                                </div>
-                                <Description v-if="occurrence.location" class="mt-1">
-                                    <Icon
-                                        :name="occurrence.online ? 'earth' : 'pin'"
-                                        class="size-3.5 inline"
-                                    />
-                                    {{ occurrence.location }}
-                                </Description>
-                            </div>
+                <!--
+                    Client-side mode. The dates arrive complete as an Inertia prop,
+                    so there is nothing to page through and no second route to
+                    fetch from — `:items` is the mode core built for exactly that.
+                    Search, filters, presets and the column picker are off because
+                    an embedded panel with its own toolbar reads as a second
+                    screen; the column headers still sort, which is what a table
+                    of dates is actually asked to do.
 
-                            <div class="flex items-center gap-2 shrink-0">
-                                <Button
-                                    :href="occurrence.ics_url"
-                                    :text="__('events::cp.download_ics')"
-                                    size="sm"
-                                    variant="ghost"
-                                    icon="download"
-                                />
-                                <Button
-                                    v-if="canManage"
-                                    :href="occurrence.edit_url"
-                                    :text="__('events::cp.edit')"
-                                    size="sm"
-                                    variant="ghost"
-                                />
-                                <Button
-                                    v-if="canManage && !occurrence.cancelled"
-                                    :text="__('events::cp.cancel_date')"
-                                    size="sm"
-                                    variant="ghost"
-                                    @click="cancelling = occurrence"
-                                />
-                                <Button
-                                    v-if="canManage"
-                                    :text="__('events::cp.delete')"
-                                    size="sm"
-                                    variant="ghost"
-                                    @click="deletingOccurrence = occurrence"
-                                />
-                            </div>
-                        </li>
-                    </ul>
-                </Card>
+                    `action-url` is the hard gate for both the checkbox column and
+                    the "…" menu's server actions, so a read-only user gets
+                    neither. Cancelling and deleting arrive through it; only the
+                    two navigations are prepended by hand below.
+                -->
+                <Listing
+                    v-else
+                    :items="occurrences"
+                    :columns="occurrenceColumns"
+                    :action-url="canManage ? occurrenceActionUrl : undefined"
+                    :allow-bulk-actions="canManage"
+                    :allow-search="false"
+                    :allow-presets="false"
+                    :allow-customizing-columns="false"
+                    sort-column="starts_at"
+                    sort-direction="asc"
+                >
+                    <template #cell-starts_at="{ row }">
+                        <span class="whitespace-nowrap">{{ row.period_label }}</span>
+                        <Badge
+                            v-if="row.all_day"
+                            size="sm"
+                            pill
+                            color="gray"
+                            class="ms-2"
+                            :text="__('events::cp.all_day')"
+                        />
+                    </template>
+
+                    <!-- The zone is a column of its own. A date rendered in its own
+                         zone without saying which one is a date the reader has to
+                         guess at. -->
+                    <template #cell-timezone="{ value }">
+                        <Badge size="sm" pill color="gray" :text="value" />
+                    </template>
+
+                    <!-- Plain text rather than MiddleEllipsis: that component
+                         measures its container, and in a table cell with no
+                         width of its own it measures zero and renders the whole
+                         address as a single "…". An address is allowed to wrap. -->
+                    <template #cell-location="{ row, value }">
+                        <span v-if="value" class="flex items-start gap-1.5">
+                            <Icon
+                                :name="row.online ? 'earth' : 'pin'"
+                                class="size-3.5 shrink-0 mt-0.5"
+                            />
+                            <span>{{ value }}</span>
+                        </span>
+                    </template>
+
+                    <template #cell-status="{ row }">
+                        <Badge
+                            size="sm"
+                            pill
+                            :color="row.cancelled ? 'red' : 'gray'"
+                            :text="row.status_label"
+                        />
+                    </template>
+
+                    <!-- Prepended, not replacing: core appends the registered
+                         actions after these, which is where cancelling and
+                         deleting a date come from. -->
+                    <template #prepended-row-actions="{ row }">
+                        <DropdownItem
+                            :text="__('events::cp.download_ics')"
+                            icon="download"
+                            :href="row.ics_url"
+                        />
+                        <DropdownItem
+                            v-if="canManage"
+                            :text="__('events::cp.edit')"
+                            icon="edit"
+                            :href="row.edit_url"
+                        />
+                    </template>
+                </Listing>
             </Panel>
 
-            <Panel class="min-w-0 h-full flex flex-col">
+            <Panel class="min-w-0 mt-6 flex flex-col">
                 <PanelHeader class="flex items-center justify-between min-h-10">
                     <Heading>{{ __('events::cp.tab_settings') }}</Heading>
                     <Button
@@ -254,26 +275,6 @@ function confirmDeleteEvent() {
         <!-- Core's overlay, not a bespoke one: core modals join the portal stack,
              the esc-key stack and FocusScope trapping. A hand-built fixed inset-0
              steals esc from its parent and z-fights with everything above it. -->
-        <ConfirmationModal
-            :open="cancelling !== null"
-            :title="__('events::cp.cancel_date')"
-            :body-text="__('events::cp.cancel_date_confirm')"
-            :button-text="__('events::cp.cancel_date')"
-            danger
-            @update:open="(open) => (open ? null : (cancelling = null))"
-            @confirm="confirmCancel"
-        />
-
-        <ConfirmationModal
-            :open="deletingOccurrence !== null"
-            :title="__('events::cp.delete_date')"
-            :body-text="__('events::cp.delete_date_confirm')"
-            :button-text="__('events::cp.delete')"
-            danger
-            @update:open="(open) => (open ? null : (deletingOccurrence = null))"
-            @confirm="confirmDeleteOccurrence"
-        />
-
         <ConfirmationModal
             :open="deletingEvent"
             :title="__('events::cp.delete_event')"

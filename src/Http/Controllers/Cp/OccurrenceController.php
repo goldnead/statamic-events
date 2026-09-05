@@ -105,29 +105,15 @@ class OccurrenceController extends Controller
         return ['saved' => true];
     }
 
-    /**
-     * Cancels a date. Idempotent — the model no-ops on an already cancelled one,
-     * so a double click does not emit a second cancellation.
+    /*
+     * Cancelling and deleting a date used to be two actions here, each with a
+     * hand-built confirmation modal on the event screen. They are registered
+     * Statamic actions now (Goldnead\Events\Actions\*), which is what earns the
+     * dates listing its checkbox column: core's bulk bar and the "…" menu of a
+     * single row run the same action through the same endpoint, so the two
+     * cannot drift apart. These methods went with the modals rather than staying
+     * behind as a second write path nobody calls.
      */
-    public function cancel(Request $request, int $occurrence)
-    {
-        Gate::authorize('manage events');
-
-        $model = $this->find($occurrence);
-
-        $model->cancel($request->string('reason')->limit(255, '')->toString() ?: null);
-
-        return back()->with('success', __('events::cp.occurrence_cancelled_flash'));
-    }
-
-    public function destroy(int $occurrence)
-    {
-        Gate::authorize('manage events');
-
-        $this->find($occurrence)->delete();
-
-        return back()->with('success', __('events::cp.occurrence_deleted_flash'));
-    }
 
     /**
      * The two model-level invariants, checked here so they surface as field

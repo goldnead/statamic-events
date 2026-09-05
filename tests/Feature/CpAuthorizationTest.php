@@ -48,8 +48,12 @@ function writeRoutes(Event $event, Occurrence $occurrence): array
         ['post', cp_route('events.occurrences.store', ['event' => $event->getKey()])],
         ['get', cp_route('events.occurrences.edit', ['occurrence' => $occurrence->getKey()])],
         ['patch', cp_route('events.occurrences.update', ['occurrence' => $occurrence->getKey()])],
-        ['post', cp_route('events.occurrences.cancel', ['occurrence' => $occurrence->getKey()])],
-        ['delete', cp_route('events.occurrences.destroy', ['occurrence' => $occurrence->getKey()])],
+        // Cancelling and deleting a date are registered actions now and go
+        // through the two routes below rather than through a route of their own.
+        // They carry `can:` middleware rather than a Gate call, because the
+        // controller behind them is core's.
+        ['post', cp_route('events.occurrences.actions.run')],
+        ['post', cp_route('events.occurrences.actions.bulk')],
     ];
 }
 

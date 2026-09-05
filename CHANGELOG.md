@@ -6,6 +6,50 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [Unreleased]
+
+### Changed: an event's dates are a Statamic table now
+
+The dates on an event's screen were a stack of blocks with the actions written out as text links
+underneath each one. Five dates filled the panel, nothing could be sorted, nothing could be picked,
+and it did not look like any other screen in the Control Panel. They are core's `<Listing>` now, in
+its client-side mode: the dates arrive complete as an Inertia prop, so there is no new route and
+nothing to page through.
+
+Four columns — the window, the timezone, the location and the status — with sortable headers, a
+checkbox column and a `…` menu per row. Nothing that was on screen before has gone: the all-day
+badge sits beside the window, the timezone and the location are columns of their own, and a
+cancelled date says so in the status column instead of a red pill in the corner.
+
+The window no longer repeats the date on the end of a same-day event. `Tue, 15 Sep 2026 19:00 –
+21:30`, not the same date twice, which in a column costs exactly the width the location needs.
+
+### Changed: cancelling and deleting a date are registered actions
+
+They were two buttons per row, each with a hand-built confirmation modal, and they only ever worked
+on one date. They are `Statamic\Actions\Action` classes now, which is what earns the listing its
+checkbox column: the same action runs from a single row's `…` menu and from the bulk bar over a
+whole selection, through `POST cp/events/occurrences/actions`, with core's confirmation, core's
+toast and core's authorization.
+
+**Removed with them:** `POST cp/events/occurrences/{occurrence}/cancel` and
+`DELETE cp/events/occurrences/{occurrence}`, along with `OccurrenceController::cancel()` and
+`::destroy()`. They existed to serve the buttons and had no caller left. Control Panel routes are
+not part of this package's public API (see the note at the top); the Antlers tags, the config keys
+and the facade are untouched.
+
+An id a selection carries that the brand scope does not reach is now a 404 rather than a shrunken
+selection. Core decides which actions apply by comparing counts, so an empty collection satisfies
+*every* action registered in the Control Panel — verified in the playground, where one foreign-brand
+id came back with core's asset actions and a 500.
+
+### Fixed: the event screen no longer borrows another addon's stylesheet
+
+The two panels sat side by side through a pair of responsive grid classes that Statamic core does
+not emit. They came from `statamic-marketing` and `statamic-clientrooms`, so the layout only ever
+appeared on an installation that happened to carry one of them; on its own this addon fell back to a
+stacked page. The panels stack on purpose now, which also gives the table the width it needs.
+
 ## [2.1.1] — 2026-09-03
 
 ### Fixed: delete moved out of the body and into the page header

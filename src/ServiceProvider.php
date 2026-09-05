@@ -73,6 +73,7 @@ class ServiceProvider extends AddonServiceProvider
     {
         $this->bootMigrations()
             ->bootTagClasses()
+            ->bootActionClasses()
             ->bootFilterScopes()
             ->bootNavigation()
             ->bootPermissions()
@@ -95,6 +96,23 @@ class ServiceProvider extends AddonServiceProvider
      * `{{ events }}` would render as nothing there. `Tags::register()` is
      * idempotent, so the parent repeating it later costs nothing.
      */
+    /**
+     * The listing actions for a date, registered by hand for the same reason as
+     * the tag above.
+     *
+     * They live in one registry with every other addon's and core's, and core
+     * asks all of them about every item on every Control Panel listing. What
+     * keeps these two off the Entries screen is their `visibleTo()`, not where
+     * they are registered — see the classes.
+     */
+    protected function bootActionClasses(): self
+    {
+        Actions\CancelOccurrence::register();
+        Actions\DeleteOccurrence::register();
+
+        return $this;
+    }
+
     protected function bootTagClasses(): self
     {
         Tags\Events::register();

@@ -22,16 +22,13 @@ return [
     'add_date' => 'Add a date to :event',
     'add_date_short' => 'Add date',
     'all_day' => 'All day',
-    'cancelled' => 'Cancelled',
+    // The titles of the two listing actions. Their confirmation and success
+    // texts sit further down with the bulk_* keys, because one action serves
+    // both a single row and a checked selection.
     'cancel_date' => 'Cancel date',
-    'cancel_date_confirm' => 'The date stays visible and is published as cancelled, so it reaches everyone who already has it in their calendar.',
     'delete_date' => 'Delete date',
-    'delete_date_confirm' => 'Deleting removes the date entirely. Subscribers keep it in their calendar. Cancel it instead if anyone might already have it.',
     'download_ics' => 'ICS',
     'calendar_feed' => 'Calendar feed',
-
-    'occurrence_cancelled_flash' => 'Date cancelled.',
-    'occurrence_deleted_flash' => 'Date deleted.',
 
     'tab_details' => 'Details',
     'tab_settings' => 'Settings',
@@ -82,6 +79,18 @@ return [
     'col_status' => 'Status',
     'col_visibility' => 'Visibility',
 
+    // The columns of the dates listing on an event's screen.
+    'col_period' => 'When',
+    'col_timezone' => 'Timezone',
+    'col_location' => 'Location',
+
+    'bulk_cancel_button' => 'Cancel date|Cancel :count dates',
+    'bulk_cancel_confirm' => 'The date stays visible and is published as cancelled, so the cancellation reaches everybody who already has it in their calendar.|The :count dates stay visible and are published as cancelled, so the cancellation reaches everybody who already has them in their calendar.',
+    'bulk_cancelled' => 'Date cancelled.|:count dates cancelled.',
+    'bulk_delete_button' => 'Delete date|Delete :count dates',
+    'bulk_delete_confirm' => 'Deleting removes the date entirely. Subscribers keep it in their calendar. If somebody might already have it, cancel it instead.|Deleting removes the :count dates entirely. Subscribers keep them in their calendar. If somebody might already have them, cancel them instead.',
+    'bulk_deleted' => 'Date deleted.|:count dates deleted.',
+
     'status_draft' => 'Draft',
     'status_published' => 'Published',
     'visibility_public' => 'Public',
@@ -108,5 +117,6 @@ return [
     'empty_create_description' => 'One event, as many dates as it has. The description is written once.',
     'empty_docs_heading' => 'Read the documentation',
     'empty_docs_description' => 'Antlers tags, the ICS feed and the four domain events other addons can listen to.',
+    'empty_dates_description' => 'A start, an end and a place. Everything else is already on the event.',
 
 ];

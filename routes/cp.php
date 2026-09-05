@@ -1,6 +1,7 @@
 <?php
 
 use Goldnead\Events\Http\Controllers\Cp\EventController;
+use Goldnead\Events\Http\Controllers\Cp\OccurrenceActionController;
 use Goldnead\Events\Http\Controllers\Cp\OccurrenceController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,13 +39,27 @@ Route::prefix('events')->name('events.')->group(function () {
         Route::post('/', [OccurrenceController::class, 'store'])->name('store')->whereNumber('event');
     });
 
+    /*
+    | The two endpoints core's <Listing> uses for row and bulk actions. They sit
+    | above the `{occurrence}` group on purpose even though `{occurrence}` only
+    | matches digits: the ordering is what a reader checks first when an action
+    | route 404s, and relying on the constraint alone leaves that ordering to
+    | luck the day somebody loosens it.
+    |
+    | `can:` middleware rather than a Gate call in the controller, because the
+    | controller is core's and has no addon-specific hook to put one in. Every
+    | action authorizes its own items on top of this.
+    */
+    Route::prefix('occurrences')->name('occurrences.')->middleware('can:manage events')->group(function () {
+        Route::post('actions', [OccurrenceActionController::class, 'run'])->name('actions.run');
+        Route::post('actions/list', [OccurrenceActionController::class, 'bulkActions'])->name('actions.bulk');
+    });
+
     // Editing a date does not need its event in the path: the row knows which
     // event it belongs to, and a URL that carries both invites the two halves to
     // disagree.
     Route::prefix('occurrences/{occurrence}')->name('occurrences.')->group(function () {
         Route::get('edit', [OccurrenceController::class, 'edit'])->name('edit')->whereNumber('occurrence');
         Route::patch('/', [OccurrenceController::class, 'update'])->name('update')->whereNumber('occurrence');
-        Route::post('cancel', [OccurrenceController::class, 'cancel'])->name('cancel')->whereNumber('occurrence');
-        Route::delete('/', [OccurrenceController::class, 'destroy'])->name('destroy')->whereNumber('occurrence');
     });
 });

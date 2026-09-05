@@ -22,16 +22,13 @@ return [
     'add_date' => 'Datum zu :event hinzufügen',
     'add_date_short' => 'Datum hinzufügen',
     'all_day' => 'Ganztägig',
-    'cancelled' => 'Abgesagt',
+    // Die Titel der beiden Listen-Aktionen. Ihre Bestätigungs- und Erfolgstexte
+    // stehen weiter unten bei den bulk_*-Schlüsseln, weil dieselbe Aktion eine
+    // Zeile und eine Mehrfachauswahl bedient.
     'cancel_date' => 'Datum absagen',
-    'cancel_date_confirm' => 'Das Datum bleibt sichtbar und wird als abgesagt veröffentlicht, damit die Absage alle erreicht, die es bereits im Kalender haben.',
     'delete_date' => 'Datum löschen',
-    'delete_date_confirm' => 'Beim Löschen verschwindet das Datum vollständig. Abonnenten behalten es im Kalender. Wenn es jemand schon haben könnte, lieber absagen.',
     'download_ics' => 'ICS',
     'calendar_feed' => 'Kalender-Feed',
-
-    'occurrence_cancelled_flash' => 'Datum abgesagt.',
-    'occurrence_deleted_flash' => 'Datum gelöscht.',
 
     'tab_details' => 'Details',
     'tab_settings' => 'Einstellungen',
@@ -82,6 +79,18 @@ return [
     'col_status' => 'Status',
     'col_visibility' => 'Sichtbarkeit',
 
+    // Die Spalten der Datumsangaben-Tabelle auf der Terminseite.
+    'col_period' => 'Zeitraum',
+    'col_timezone' => 'Zeitzone',
+    'col_location' => 'Ort',
+
+    'bulk_cancel_button' => 'Datum absagen|:count Datumsangaben absagen',
+    'bulk_cancel_confirm' => 'Das Datum bleibt sichtbar und wird als abgesagt veröffentlicht, damit die Absage alle erreicht, die es bereits im Kalender haben.|Die :count Datumsangaben bleiben sichtbar und werden als abgesagt veröffentlicht, damit die Absage alle erreicht, die sie bereits im Kalender haben.',
+    'bulk_cancelled' => 'Datum abgesagt.|:count Datumsangaben abgesagt.',
+    'bulk_delete_button' => 'Datum löschen|:count Datumsangaben löschen',
+    'bulk_delete_confirm' => 'Beim Löschen verschwindet das Datum vollständig. Abonnenten behalten es im Kalender. Wenn es jemand schon haben könnte, lieber absagen.|Beim Löschen verschwinden die :count Datumsangaben vollständig. Abonnenten behalten sie im Kalender. Wenn jemand sie schon haben könnte, lieber absagen.',
+    'bulk_deleted' => 'Datum gelöscht.|:count Datumsangaben gelöscht.',
+
     'status_draft' => 'Entwurf',
     'status_published' => 'Veröffentlicht',
     'visibility_public' => 'Öffentlich',
@@ -108,5 +117,6 @@ return [
     'empty_create_description' => 'Ein Termin, so viele Datumsangaben wie nötig. Die Beschreibung wird einmal geschrieben.',
     'empty_docs_heading' => 'Dokumentation lesen',
     'empty_docs_description' => 'Antlers-Tags, der ICS-Feed und die vier Domain-Events, auf die andere Addons hören können.',
+    'empty_dates_description' => 'Beginn, Ende und Ort. Alles Weitere steht schon am Termin.',
 
 ];
