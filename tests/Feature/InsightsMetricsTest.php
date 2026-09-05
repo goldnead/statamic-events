@@ -294,9 +294,10 @@ it('splits by type and keeps the row that has none', function () {
 
     $rows = (new Published)->breakdown(insightsWindow(), 'type');
 
-    expect(insightsKeyed($rows))->toBe(['workshop' => 2, 'concert' => 1, '' => 1])
+    expect(insightsKeyed($rows))->toEqual(['workshop' => 2, 'concert' => 1, '' => 1])
         // Largest first.
         ->and($rows[0]['key'])->toBe('workshop')
+        ->and(insightsValuesDescend($rows))->toBeTrue()
         // And the split adds up to the figure it splits.
         ->and(array_sum(array_column($rows, 'value')))->toBe(4);
 
@@ -616,7 +617,7 @@ it('counts no undated row over an open-ended period', function () {
 
     // The splits are windowed by the same method and inherit the same guard.
     expect(insightsKeyed((new Published)->breakdown($everything, 'type')))
-        ->toBe(['workshop' => 2, 'concert' => 2, '' => 1]);
+        ->toEqual(['workshop' => 2, 'concert' => 2, '' => 1]);
 });
 
 // -- One brand at a time ------------------------------------------------------
