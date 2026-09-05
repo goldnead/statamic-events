@@ -4,7 +4,6 @@ import { Head, router } from '@statamic/cms/inertia';
 import {
     Badge,
     Button,
-    ButtonGroup,
     Card,
     CommandPaletteItem,
     ConfirmationModal,
@@ -84,7 +83,12 @@ function reload() {
     -->
     <div class="max-w-page mx-auto" data-max-width-wrapper>
         <Header :title="event.title" icon="calendar">
-            <ButtonGroup role="group" :aria-label="__('events::cp.event_actions')">
+            <!-- Keine `ButtonGroup` hier: die ist in Core ein Segment-Schalter
+                 (ein Rahmen um alles, Trennlinien statt Abstand) — richtig fuer
+                 den Listen/Kachel-Umschalter, falsch fuer Kopfzeilen-Aktionen.
+                 Sie liess "Alle Termine" ohne eigenen Rahmen und klebte den
+                 Primaerknopf ans "…"-Menue. Core setzt die Aktionen als
+                 Geschwister in den Slot; `Events/Index.vue` macht es genauso. -->
                 <Button :href="indexUrl" :text="__('events::cp.back_to_events')" variant="ghost" />
                 <!-- Deleting the event used to be a `Button variant="danger"`
                      halfway down the page, under the calendar feed. A
@@ -113,7 +117,6 @@ function reload() {
                 >
                     <Button :href="url" :text="text" variant="primary" />
                 </CommandPaletteItem>
-            </ButtonGroup>
         </Header>
 
         <!--

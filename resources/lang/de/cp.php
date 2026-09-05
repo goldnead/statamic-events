@@ -14,7 +14,6 @@ return [
     'delete_event' => 'Termin löschen',
     'delete_event_confirm' => 'Mit dem Termin werden alle Datumsangaben gelöscht. Wer den Kalender abonniert hat, behält die bereits importierten Daten.',
     'back_to_events' => 'Alle Termine',
-    'event_actions' => 'Aktionen',
 
     'dates' => 'Datumsangaben',
     'no_dates' => 'Für diesen Termin ist noch kein Datum eingetragen.',

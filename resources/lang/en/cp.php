@@ -14,7 +14,6 @@ return [
     'delete_event' => 'Delete event',
     'delete_event_confirm' => 'Deleting the event deletes all of its dates. Anyone who has subscribed to a calendar keeps the dates they already imported.',
     'back_to_events' => 'All events',
-    'event_actions' => 'Event actions',
 
     'dates' => 'Dates',
     'no_dates' => 'This event has no dates yet.',
