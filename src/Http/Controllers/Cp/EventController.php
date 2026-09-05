@@ -341,7 +341,8 @@ class EventController extends Controller
             // at its place. The zone is a column of its own so nobody has to
             // guess which one they are reading.
             'starts_at' => $occurrence->localStart()->format('Y-m-d H:i'),
-            'ends_at' => $occurrence->localEnd()?->format('Y-m-d H:i'),
+            // No `ends_at` beside it: the end is part of `period_label` and no
+            // column or slot reads it on its own.
             'period_label' => $this->period($occurrence),
             'timezone' => $occurrence->effectiveTimezone(),
             'all_day' => $occurrence->all_day,

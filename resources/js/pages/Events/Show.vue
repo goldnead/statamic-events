@@ -51,6 +51,23 @@ function confirmDeleteEvent() {
     router.delete(props.deleteUrl);
     deletingEvent.value = false;
 }
+
+/**
+ * What puts a cancelled or deleted date on screen.
+ *
+ * The listing runs client-side, so its own `refresh()` has no URL to re-fetch
+ * from and does nothing. It still emits `refreshing`, which core fires after
+ * every completed row or bulk action — reloading the page from here is what
+ * brings the new props down. The same arrangement as `Events/Index.vue`.
+ *
+ * A `redirect()` on the action would also refresh the screen, and it is the
+ * wrong tool: core returns from the redirect branch before it reads the
+ * action's message, so the German success text would be swallowed and the user
+ * would get "Action completed" instead.
+ */
+function reload() {
+    router.reload({ preserveScroll: true });
+}
 </script>
 
 <template>
@@ -100,20 +117,24 @@ function confirmDeleteEvent() {
         </Header>
 
         <!--
-            Stacked, not side by side, and that is a correction rather than a
-            preference. This addon ships no stylesheet of its own, so the only
-            utilities that exist are the ones Statamic core already emits — and
-            core emits neither of the two responsive grid classes the earlier
-            two-column layout was built on. Grepping the playground's built CSS
-            finds them in `statamic-marketing` and `statamic-clientrooms`: the
-            side-by-side arrangement only ever appeared because a sibling addon
-            happened to be installed, and a customer running this addon alone got
-            the stacked fallback anyway.
+            Stacked, not side by side. Two separate reasons, both measured in the
+            playground rather than assumed:
 
-            Stacking on purpose costs nothing here and buys the table the full
-            width, which is what the dates actually need: four columns plus the
-            checkbox and the "…" menu want 729px, and two thirds of a detail
-            screen was 661.
+            The old two-column layout was built on a pair of responsive grid
+            classes that Statamic core does not emit. This addon ships no
+            stylesheet of its own, so the only utilities that exist are core's —
+            and grepping the built CSS finds those two in `statamic-marketing`
+            and `statamic-clientrooms`. Side by side only ever appeared on an
+            installation that happened to carry a sibling addon; on its own this
+            addon fell back to a stacked page already.
+
+            Side by side is buildable with classes core *does* emit, so that
+            alone would not settle it. What settles it is the width. The table
+            needs 988px for its four columns plus the checkbox and the "…" menu.
+            Two thirds of a detail screen gives it 739: the actions column then
+            sits 242px outside the visible area, reachable only by scrolling the
+            table sideways, which is a "…" menu nobody finds. Stacked it gets
+            1128 and everything is on screen.
         -->
         <div>
             <Panel class="min-w-0 flex flex-col">
@@ -166,6 +187,7 @@ function confirmDeleteEvent() {
                     :allow-customizing-columns="false"
                     sort-column="starts_at"
                     sort-direction="asc"
+                    @refreshing="reload"
                 >
                     <template #cell-starts_at="{ row }">
                         <span class="whitespace-nowrap">{{ row.period_label }}</span>
@@ -186,16 +208,22 @@ function confirmDeleteEvent() {
                         <Badge size="sm" pill color="gray" :text="value" />
                     </template>
 
-                    <!-- Plain text rather than MiddleEllipsis: that component
-                         measures its container, and in a table cell with no
-                         width of its own it measures zero and renders the whole
-                         address as a single "…". An address is allowed to wrap. -->
+                    <!--
+                        Plain text rather than MiddleEllipsis: that component
+                        measures its container, and in a table cell with no width
+                        of its own it measures zero and renders the whole address
+                        as a single "…".
+
+                        `whitespace-nowrap` because a wrapping address is worse
+                        than a wider table. Core's own listings keep one line per
+                        row and let the table scroll sideways; measured on a
+                        390px screen, a wrapping location column put every row at
+                        125px where core's collections listing sits at 49-65 —
+                        and the table scrolled sideways anyway.
+                    -->
                     <template #cell-location="{ row, value }">
-                        <span v-if="value" class="flex items-start gap-1.5">
-                            <Icon
-                                :name="row.online ? 'earth' : 'pin'"
-                                class="size-3.5 shrink-0 mt-0.5"
-                            />
+                        <span v-if="value" class="flex items-center gap-1.5 whitespace-nowrap">
+                            <Icon :name="row.online ? 'earth' : 'pin'" class="size-3.5 shrink-0" />
                             <span>{{ value }}</span>
                         </span>
                     </template>

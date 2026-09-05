@@ -32,6 +32,12 @@ checkbox column: the same action runs from a single row's `…` menu and from th
 whole selection, through `POST cp/events/occurrences/actions`, with core's confirmation, core's
 toast and core's authorization.
 
+Neither action declares a `redirect()`, and that is deliberate. A redirect looks like the obvious way
+to get a client-side listing to show the new state, and it silently costs the success message: core's
+`ActionController::run()` returns from the redirect branch before it reads what the action returned,
+so the front end falls back to toasting its own "Action completed". The screen refreshes through the
+listing's `refreshing` event instead, which is what `Events/Index.vue` already does.
+
 **Removed with them:** `POST cp/events/occurrences/{occurrence}/cancel` and
 `DELETE cp/events/occurrences/{occurrence}`, along with `OccurrenceController::cancel()` and
 `::destroy()`. They existed to serve the buttons and had no caller left. Control Panel routes are
@@ -48,7 +54,16 @@ id came back with core's asset actions and a 500.
 The two panels sat side by side through a pair of responsive grid classes that Statamic core does
 not emit. They came from `statamic-marketing` and `statamic-clientrooms`, so the layout only ever
 appeared on an installation that happened to carry one of them; on its own this addon fell back to a
-stacked page. The panels stack on purpose now, which also gives the table the width it needs.
+stacked page.
+
+They stack on purpose now, and the reason is the table rather than the missing classes — side by
+side is buildable with classes core does emit. Measured: the table needs 988px, two thirds of a
+detail screen gives it 739, and the `…` column then sits 242px outside the visible area, reachable
+only by scrolling the table sideways. Stacked it gets 1128.
+
+The location column keeps one line per row, the way core's listings do. Letting an address wrap put
+every row at 125px on a 390px screen where core's collections listing sits at 49-65 — and the table
+scrolled sideways anyway. Rows are 47px now at both widths.
 
 ## [2.1.1] — 2026-09-03
 

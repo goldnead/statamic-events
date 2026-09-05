@@ -8,7 +8,7 @@ const occurrence = {
     // The sortable value, not the readable one. Client-side sorting compares the
     // raw field, so "Wed, 15 Jul 2026" would sort by weekday.
     starts_at: '2026-07-15 19:00',
-    ends_at: '2026-07-15 21:00',
+    // No `ends_at`: the end lives in the label, and no column reads it alone.
     period_label: 'Wed, 15 Jul 2026 19:00 – 21:00',
     timezone: 'Europe/Berlin',
     all_day: false,
@@ -108,6 +108,18 @@ describe('the event detail page', () => {
 
         expect(table.props('actionUrl')).toBe('/cp/events/occurrences/actions');
         expect(table.props('allowBulkActions')).toBe(true);
+    });
+
+    it('reloads through the Inertia router when an action finishes', () => {
+        // A client-side listing has no URL to re-fetch from, so its own refresh
+        // does nothing. This is what actually puts a cancelled date on screen —
+        // and the reason neither action declares a redirect, which would cost
+        // the success toast.
+        const wrapper = mount(Show, { props });
+
+        listing(wrapper).vm.$emit('refreshing');
+
+        expect(router.calls).toEqual([{ method: 'reload', options: { preserveScroll: true } }]);
     });
 
     it('offers a read-only user neither the checkboxes nor the write actions', () => {

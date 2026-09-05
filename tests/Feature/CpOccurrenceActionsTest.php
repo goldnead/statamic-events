@@ -102,17 +102,26 @@ it('cancels every checked date and sends the screen back to itself', function ()
     $first = occurrenceOn($event);
     $second = occurrenceOn($event, '2026-07-22 17:00');
 
-    $this->actingAs(actor())
+    $response = $this->actingAs(actor())
         ->post(cp_route('events.occurrences.actions.run'), [
             'action' => 'events_cancel_occurrence',
             'selections' => [$first->getKey(), $second->getKey()],
             'values' => [],
             'context' => ['view' => 'list'],
         ])
-        ->assertOk()
-        // The listing runs client-side, so it has nothing to re-fetch. Without
-        // the redirect the action succeeds and the table keeps the old rows.
-        ->assertJsonPath('redirect', cp_route('events.show', ['event' => $event->getKey()]));
+        ->assertOk();
+
+    /*
+     * The message has to reach the browser, because it is the toast the editor
+     * reads. A `redirect()` on the action would look like the way to refresh a
+     * client-side listing and would silently cost this: core returns from the
+     * redirect branch before it reads what run() gave back, and the front end
+     * falls through to its own "Action completed".
+     */
+    expect($response->json('success'))->toBeTrue()
+        ->and($response->json('message'))->toBe(trans_choice('events::cp.bulk_cancelled', 2))
+        ->and($response->json('message'))->toContain('2')
+        ->and($response->json())->not->toHaveKey('redirect');
 
     expect($first->refresh()->status)->toBe(OccurrenceStatus::Cancelled)
         ->and($second->refresh()->status)->toBe(OccurrenceStatus::Cancelled);
@@ -126,7 +135,7 @@ it('deletes every checked date', function () {
     $second = occurrenceOn($event, '2026-07-22 17:00');
     $kept = occurrenceOn($event, '2026-07-29 17:00');
 
-    $this->actingAs(actor())
+    $response = $this->actingAs(actor())
         ->post(cp_route('events.occurrences.actions.run'), [
             'action' => 'events_delete_occurrence',
             'selections' => [$first->getKey(), $second->getKey()],
@@ -135,7 +144,9 @@ it('deletes every checked date', function () {
         ])
         ->assertOk();
 
-    expect(Occurrence::query()->pluck('id')->all())->toBe([$kept->getKey()]);
+    expect($response->json('message'))->toBe(trans_choice('events::cp.bulk_deleted', 2))
+        ->and($response->json())->not->toHaveKey('redirect')
+        ->and(Occurrence::query()->pluck('id')->all())->toBe([$kept->getKey()]);
 });
 
 it('refuses a selection the brand scope does not reach', function () {
@@ -209,6 +220,9 @@ it('hands the screen sortable dates and the columns to show them in', function (
         // The end does not repeat the date on the same day; that repetition costs
         // the column width the location needs.
         ->and(substr_count($row['period_label'], '2026'))->toBe(1)
+        // The end lives in the label; a second `ends_at` beside it would be a
+        // field no column and no slot reads.
+        ->and($row)->not->toHaveKey('ends_at')
         ->and($row['location'])->toBe('Alte Schmiede, Kiel')
         ->and($row['status_label'])->not->toBeEmpty()
         ->and($props['occurrenceActionUrl'])->toBe(cp_route('events.occurrences.actions.run'));

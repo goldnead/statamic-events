@@ -50,21 +50,11 @@ class DeleteOccurrence extends Action
         return trans_choice('events::cp.bulk_delete_confirm', $this->items->count());
     }
 
+    /** @see CancelOccurrence::run() for why there is no `redirect()` beside this. */
     public function run($items, $values)
     {
-        // Read before the delete: an ejected model still answers, but reading the
-        // event id off the collection afterwards is the kind of thing that works
-        // until somebody swaps `delete()` for a query.
         $items->each->delete();
 
         return trans_choice('events::cp.bulk_deleted', $items->count());
-    }
-
-    /** @see CancelOccurrence::redirect() for why a client-side listing needs one. */
-    public function redirect($items, $values)
-    {
-        $event = $items->first()?->event_id;
-
-        return $event ? cp_route('events.show', ['event' => $event]) : false;
     }
 }

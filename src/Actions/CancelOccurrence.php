@@ -58,6 +58,17 @@ class CancelOccurrence extends Action
         return trans_choice('events::cp.bulk_cancel_confirm', $this->items->count());
     }
 
+    /**
+     * Returns the message, and deliberately no `redirect()`.
+     *
+     * A redirect would look like the obvious way to get the client-side listing
+     * to show the new status, because it has no URL of its own to re-fetch from.
+     * It is a trap: core's `ActionController::run()` returns from the redirect
+     * branch *before* it reaches the message, so the string below would never
+     * leave the server and the front end would toast its own "Action completed"
+     * instead. The screen refreshes through the listing's `refreshing` event
+     * instead — see `Events/Show.vue`.
+     */
     public function run($items, $values)
     {
         // The model no-ops on an already cancelled date, so a selection that
@@ -65,19 +76,5 @@ class CancelOccurrence extends Action
         $items->each->cancel();
 
         return trans_choice('events::cp.bulk_cancelled', $items->count());
-    }
-
-    /**
-     * The dates are an Inertia prop of the event screen, not a paginated
-     * listing the table can re-fetch on its own — core's client-side `<Listing>`
-     * has nothing to refresh against. Handing back the screen's own URL makes
-     * the front end revisit it, which is what puts the new status on screen.
-     * Without this the action succeeds and the table keeps showing the old row.
-     */
-    public function redirect($items, $values)
-    {
-        $event = $items->first()?->event_id;
-
-        return $event ? cp_route('events.show', ['event' => $event]) : false;
     }
 }
