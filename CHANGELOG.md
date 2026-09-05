@@ -8,6 +8,26 @@ config keys and facade methods are part of the public API from the first release
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-09-05
+
+### Fixed: the header actions were glued together
+
+`ButtonGroup` is a segmented control in Statamic — one border around everything, dividers instead
+of gaps. Right for the list/grid switch, wrong for a header's actions: "All events" had no button
+of its own and the primary button sat flush against the "…" menu. The actions are siblings in the
+header slot now, the way `Events/Index.vue` and core's own headers do it.
+
+### Fixed: two tests asserted an order the query never promised
+
+The status breakdown is sorted by count, descending, and says nothing about rows that tie. SQLite
+and MySQL break a tie differently, so the suite was green locally and red on CI. The tests now
+check what is actually guaranteed — the figures, and that they never rise — which is more than
+they checked before. A deterministic tie-break belongs in `TableMetric::splitByColumn` of
+`statamic-insights`, which thirteen addons carry byte for byte; that is its own ticket.
+
+Pint also tripped over `tests/Fakes/insights-contracts.php`. All three pinned copies are excluded
+now, not just one.
+
 ### Changed: an event's dates are a Statamic table now
 
 The dates on an event's screen were a stack of blocks with the actions written out as text links
