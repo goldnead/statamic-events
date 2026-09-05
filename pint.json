@@ -1,6 +1,8 @@
 {
     "preset": "laravel",
     "notPath": [
+        "tests/Fakes/insights-contracts.php",
+        "tests/Fakes/insights-facade.php",
         "tests/Fakes/insights-table-metric.php"
     ],
     "rules": {

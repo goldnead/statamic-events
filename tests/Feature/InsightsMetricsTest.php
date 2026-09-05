@@ -94,6 +94,25 @@ function insightsKeyed(array $rows): array
 }
 
 /**
+ * Die Zusage des Aufteilers: groesste Zahl zuerst.
+ *
+ * Was er *nicht* zusagt, ist die Reihenfolge bei Gleichstand — `splitByColumn`
+ * sortiert allein nach der Kennzahl (`TableMetric`, das dieses Addon als
+ * byte-genaue Kopie unter `tests/Fakes/` mitfuehrt). SQLite und MySQL loesen
+ * einen Gleichstand verschieden auf. Deshalb pruefen die Tests die Zahlen mit
+ * `toEqual` und die Ordnung hiermit, statt beides mit einem `toBe` zu
+ * vermischen und an der Datenbank haengen zu bleiben.
+ */
+function insightsValuesDescend(array $rows): bool
+{
+    $values = array_column($rows, 'value');
+    $sorted = $values;
+    rsort($sorted);
+
+    return $values === $sorted;
+}
+
+/**
  * Four published events, four dates in the window, one cancellation inside it.
  *
  * Small enough to add up in the head, and every awkward case is in it: a draft
@@ -205,9 +224,18 @@ it('counts a cancellation on the day it went out, not on the day of the date', f
 
     $window = insightsWindow();
 
+    $rows = (new Occurrences)->breakdown($window, 'status');
+
+    // `toEqual`, nicht `toBe`: der Aufteiler sortiert nach Anzahl absteigend
+    // und sagt fuer *gleiche* Anzahlen nichts zu. Scheduled und Cancelled
+    // stehen hier beide auf 2 — SQLite loest den Gleichstand anders auf als
+    // MySQL, und `toBe` haette eine Reihenfolge mitgeprueft, die es gar nicht
+    // gibt. Geprueft wird deshalb, was zugesagt ist: die Zahlen, und dass sie
+    // nicht ansteigen.
     expect((new Cancelled)->value($window))->toBe(1)
-        ->and(insightsKeyed((new Occurrences)->breakdown($window, 'status')))
-        ->toBe([OccurrenceStatus::Scheduled->value => 2, OccurrenceStatus::Cancelled->value => 2]);
+        ->and(insightsKeyed($rows))
+        ->toEqual([OccurrenceStatus::Scheduled->value => 2, OccurrenceStatus::Cancelled->value => 2])
+        ->and(insightsValuesDescend($rows))->toBeTrue();
 });
 
 /**
@@ -309,11 +337,14 @@ it('keeps a date whose status is empty in the split', function () {
     $window = insightsWindow();
     $rows = (new Occurrences)->breakdown($window, 'status');
 
-    expect(insightsKeyed($rows))->toBe([
+    // `toEqual` aus demselben Grund wie oben: Scheduled und Cancelled stehen
+    // beide auf 2, und der Gleichstand hat keine zugesagte Reihenfolge.
+    expect(insightsKeyed($rows))->toEqual([
         OccurrenceStatus::Scheduled->value => 2,
         OccurrenceStatus::Cancelled->value => 2,
         '' => 1,
     ])
+        ->and(insightsValuesDescend($rows))->toBeTrue()
         ->and(array_sum(array_column($rows, 'value')))->toBe((new Occurrences)->value($window));
 
     expect(collect($rows)->firstWhere('key', null)['label'])->toBe(__('events::cp.metric_no_status'));
