@@ -58,7 +58,7 @@
             "description": "Brand-scoped events with multiple occurrences, timezones, venues and ICS feeds.",
             "url": "https://github.com/goldnead/statamic-events",
             "developer": "Adrian Goldner",
-            "developer-url": "https://gldnr.studio"
+            "developer-url": "https://adriangoldner.dev"
         },
         "laravel": {
             "providers": [
