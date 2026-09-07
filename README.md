@@ -55,8 +55,25 @@ php artisan vendor:publish --tag=events-migrations
 |---|---|
 | `view events` | The Events screens, read-only |
 | `manage events` | Creating, editing, cancelling and deleting events and their dates |
+| `manage events settings` | The settings section described below |
 
-Both are registered in the `events` group. `manage events` is a child of `view events`.
+All three are registered in the `events` group. `manage events` is a child of `view events`;
+`manage events settings` stands on its own, because changing how new events start and what the
+public feed serves is a different question from tending the calendar.
+
+## Settings
+
+Most of `config/events.php` is editable per brand under **Control Panel → Addon-Einstellungen**,
+without a deploy: the timezone and visibility a new event starts with, the five calendar feed keys
+and the listing page size. Only what somebody changed is stored; everything else keeps following the
+config file, so upgrading the package still moves the defaults.
+
+Three keys stay in the config file on purpose. `cp.enabled` and `bridges.activity` are read while the
+application boots — a switch on a screen that only takes effect on the next deploy would be a lie —
+and `types` is a handle-to-label map, which no settings field can edit without mangling it.
+
+The screen itself comes from `goldnead/statamic-brand-context`; this package only declares its
+fields.
 
 ---
 

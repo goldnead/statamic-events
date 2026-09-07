@@ -6,6 +6,7 @@ return [
     'title' => 'Events',
     'permission_view' => 'View events',
     'permission_manage' => 'Create, edit and delete events and dates',
+    'permission_manage_settings' => 'Change the events settings',
 
     'create_event' => 'Create Event',
     'edit' => 'Edit',

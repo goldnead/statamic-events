@@ -6,6 +6,7 @@ return [
     'title' => 'Termine',
     'permission_view' => 'Termine ansehen',
     'permission_manage' => 'Termine und Datumsangaben anlegen, bearbeiten und löschen',
+    'permission_manage_settings' => 'Einstellungen der Termine ändern',
 
     'create_event' => 'Termin anlegen',
     'edit' => 'Bearbeiten',

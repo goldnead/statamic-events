@@ -2,12 +2,14 @@
 
 namespace Goldnead\Events;
 
+use Goldnead\BrandContext\Settings\SettingsRegistry;
 use Goldnead\Events\Bridges\ActivityBridge;
 use Goldnead\Events\Integrations\Insights\Cancelled;
 use Goldnead\Events\Integrations\Insights\Occurrences;
 use Goldnead\Events\Integrations\Insights\Published;
 use Goldnead\Events\Query\Scopes\Filters;
 use Goldnead\Events\Support\Ics;
+use Goldnead\Events\Support\Settings;
 use Illuminate\Support\Facades\Log;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
@@ -67,6 +69,25 @@ class ServiceProvider extends AddonServiceProvider
         if ($this->app->resolved('translator')) {
             $this->app['translator']->addNamespace('events', $langPath);
         }
+    }
+
+    /**
+     * Meldet die Einstellungen dieses Addons beim gemeinsamen Bildschirm an.
+     *
+     * In `boot()`, nicht in `bootAddon()`, und das ist keine Stilfrage:
+     * brand-context wendet die gespeicherten Ueberschreibungen aus einem
+     * `app->booted()`-Rueckruf an, damit jedes `boot()` vorher registrieren
+     * konnte. `bootAddon()` laeuft selbst aus einem `app->booted()`-Rueckruf
+     * (Statamics AppServiceProvider) — wer sich dort anmeldet, kommt je nach
+     * Paket-Ladereihenfolge mal vor und mal nach dem Anwenden, und die
+     * Einstellungen wirken auf der einen Installation und auf der anderen
+     * nicht, ohne dass irgendetwas auf dem Bildschirm das sagt.
+     */
+    public function boot(): void
+    {
+        parent::boot();
+
+        $this->app->make(SettingsRegistry::class)->register(Settings::class);
     }
 
     public function bootAddon(): void
@@ -189,6 +210,15 @@ class ServiceProvider extends AddonServiceProvider
                         Permission::make('manage events')
                             ->label(__('events::cp.permission_manage')),
                     ]);
+
+                // Nicht unter `view events` gehaengt: die Einstellungen aendern,
+                // wie neue Termine starten und was der oeffentliche Feed
+                // ausliefert. Das ist eine andere Frage als "darf jemand den
+                // Kalender pflegen", und wer sie beantworten darf, wird
+                // getrennt entschieden. Geprueft wird das Recht von
+                // brand-context, nicht hier.
+                Permission::register('manage events settings')
+                    ->label(__('events::cp.permission_manage_settings'));
             });
         });
 
