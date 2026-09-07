@@ -12,6 +12,9 @@ export default defineConfig({
             '@statamic/cms/ui': fileURLToPath(new URL('./tests/js/stubs/ui.js', import.meta.url)),
             '@statamic/cms/inertia': fileURLToPath(new URL('./tests/js/stubs/inertia.js', import.meta.url)),
             '@statamic/cms/api': fileURLToPath(new URL('./tests/js/stubs/api.js', import.meta.url)),
+            '@statamic/cms/save-pipeline': fileURLToPath(
+                new URL('./tests/js/stubs/save-pipeline.js', import.meta.url)
+            ),
         },
     },
     test: {

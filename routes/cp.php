@@ -29,8 +29,9 @@ Route::prefix('events')->name('events.')->group(function () {
 
     // `create` is matched before `{event}` and `{event}` only matches digits, so
     // neither can swallow the other.
+    // No `{event}/edit`. The detail screen is the form, so a second screen for
+    // the same blueprint would be a second truth about the same record.
     Route::get('{event}', [EventController::class, 'show'])->name('show')->whereNumber('event');
-    Route::get('{event}/edit', [EventController::class, 'edit'])->name('edit')->whereNumber('event');
     Route::patch('{event}', [EventController::class, 'update'])->name('update')->whereNumber('event');
     Route::delete('{event}', [EventController::class, 'destroy'])->name('destroy')->whereNumber('event');
 

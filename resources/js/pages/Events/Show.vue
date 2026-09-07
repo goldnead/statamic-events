@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import { Head, router } from '@statamic/cms/inertia';
 import {
     Badge,
@@ -20,15 +20,20 @@ import {
     Listing,
     Panel,
     PanelHeader,
-    Subheading,
+    PublishContainer,
+    PublishTabs,
 } from '@statamic/cms/ui';
+import { Pipeline, Request } from '@statamic/cms/save-pipeline';
+import OccurrenceStack from '../../components/OccurrenceStack.vue';
 
 const props = defineProps({
     event: { type: Object, required: true },
+    // Blueprint, Werte, Metadaten und Ziel-URL — dieselbe Nutzlast, die core's
+    // eigene PublishForm-Seite bekommt. Siehe EventController::formPayload().
+    form: { type: Object, required: true },
     occurrences: { type: Array, default: () => [] },
     occurrenceColumns: { type: Array, default: () => [] },
     occurrenceActionUrl: { type: String, default: null },
-    editUrl: { type: String, required: true },
     deleteUrl: { type: String, required: true },
     indexUrl: { type: String, required: true },
     addOccurrenceUrl: { type: String, required: true },
@@ -42,6 +47,44 @@ const props = defineProps({
 // their toast come from the same place whether the editor picked one row or
 // checked five.
 const deletingEvent = ref(false);
+
+/*
+ * Die Detailseite ist das Formular.
+ *
+ * Vorher stand hier eine graue Karte mit Schluessel-Wert-Paaren und einem
+ * "Bearbeiten"-Knopf, der auf eine zweite Seite fuehrte. Der Collection-Entry
+ * kennt diesen Bruch nicht: was auf der Seite steht, ist das Feld, und
+ * gespeichert wird oben rechts.
+ *
+ * Container, Tabs, Sidebar und Save-Pipeline sind core's — hier steht nur, was
+ * dieses Addon davon zusammensetzt. `container` ist die Vorlagen-Referenz, aus
+ * der die Pipeline die sichtbaren Werte liest.
+ */
+const container = useTemplateRef('container');
+const values = ref({ ...props.form.values });
+const errors = ref({});
+const saving = ref(false);
+
+function save() {
+    new Pipeline()
+        .provide({ container, errors, saving })
+        .through([new Request(props.form.submitUrl, 'patch')])
+        .then(() => window.Statamic?.$toast?.success?.(__('Saved')))
+        // Fehlschlaege meldet die Pipeline selbst (Toast, Feldfehler). Der
+        // Zweig verhindert nur eine unbehandelte Promise in der Konsole.
+        .catch(() => {});
+}
+
+/*
+ * Datum anlegen und bearbeiten laufen beide durch den Stack. `null` heisst zu;
+ * eine URL heisst auf, mit genau dem Formular, das hinter dieser URL liegt.
+ */
+const occurrenceUrl = ref(null);
+
+function savedOccurrence() {
+    occurrenceUrl.value = null;
+    reload();
+}
 
 // Every mutation goes through the Inertia router, never axios: the router owns
 // the progress bar, the flash toast, the dirty-state guard and back-button
@@ -106,18 +149,53 @@ function reload() {
                         />
                     </DropdownMenu>
                 </Dropdown>
+                <!-- `action` statt `url`: das Datumsformular hat keine Seite
+                     mehr, auf die man navigieren wuerde, sondern faehrt als
+                     Stack ueber diese hier. Der Eintrag in der Befehlspalette
+                     bleibt davon unberuehrt. -->
                 <CommandPaletteItem
                     v-if="canManage"
                     category="Actions"
                     :text="__('events::cp.add_date_short')"
                     icon="calendar"
-                    :url="addOccurrenceUrl"
+                    :action="() => (occurrenceUrl = addOccurrenceUrl)"
                     prioritize
-                    v-slot="{ text, url }"
+                    v-slot="{ text, action }"
                 >
-                    <Button :href="url" :text="text" variant="primary" />
+                    <Button :text="text" @click="action" />
                 </CommandPaletteItem>
+                <!-- Speichern ist der Primaerknopf der Seite, wie beim Entry. -->
+                <Button
+                    v-if="canManage"
+                    variant="primary"
+                    :text="__('Save')"
+                    :disabled="saving"
+                    @click="save"
+                />
         </Header>
+
+        <!--
+            Das Formular steht ueber der Datumstabelle, weil es der Datensatz
+            ist, auf dessen Seite man steht: Titel, Slug, Beschreibung links,
+            Typ, Status, Sichtbarkeit und Zeitzone in der Sidebar — die Aufteilung
+            kommt aus dem Blueprint (`main` und `sidebar`), nicht aus Klassen,
+            die hier vergeben werden.
+
+            `read-only`, wenn jemand nur lesen darf: dieselben Felder, keine
+            Eingabe, und oben rechts kein Speichern-Knopf. Eine zweite,
+            lesende Darstellung derselben Werte waere eine zweite Wahrheit.
+        -->
+        <PublishContainer
+            ref="container"
+            name="events-event"
+            :blueprint="form.blueprint"
+            :meta="form.meta"
+            :errors="errors"
+            :read-only="! canManage"
+            v-model="values"
+        >
+            <PublishTabs />
+        </PublishContainer>
 
         <!--
             Stacked, not side by side. Two separate reasons, both measured in the
@@ -145,9 +223,9 @@ function reload() {
                     <Heading>{{ __('events::cp.dates') }}</Heading>
                     <Button
                         v-if="canManage"
-                        :href="addOccurrenceUrl"
                         :text="__('events::cp.add_date_short')"
                         size="sm"
+                        @click="occurrenceUrl = addOccurrenceUrl"
                     />
                 </PanelHeader>
 
@@ -158,8 +236,8 @@ function reload() {
                 >
                     <EmptyStateItem
                         v-if="canManage"
-                        :href="addOccurrenceUrl"
                         icon="calendar"
+                        @click="occurrenceUrl = addOccurrenceUrl"
                         :heading="__('events::cp.add_date_short')"
                         :description="__('events::cp.empty_dates_description')"
                     />
@@ -253,50 +331,38 @@ function reload() {
                             v-if="canManage"
                             :text="__('events::cp.edit')"
                             icon="edit"
-                            :href="row.edit_url"
+                            @click="occurrenceUrl = row.edit_url"
                         />
                     </template>
                 </Listing>
             </Panel>
 
+            <!--
+                Was hier frueher stand — Typ, Status, Sichtbarkeit, Zeitzone,
+                Slug und Beschreibung als Schluessel-Wert-Paare — sind jetzt
+                die Felder des Formulars oben. Uebrig bleibt das eine, was
+                kein Feld ist: die Adresse des Kalender-Feeds. Sie gehoert
+                nicht dem einzelnen Termin, sondern der Installation, und ist
+                hier die einzige Stelle im Control Panel, an der sie steht.
+            -->
             <Panel class="min-w-0 mt-6 flex flex-col">
-                <PanelHeader class="flex items-center justify-between min-h-10">
-                    <Heading>{{ __('events::cp.tab_settings') }}</Heading>
-                    <Button
-                        v-if="canManage"
-                        :href="editUrl"
-                        :text="__('events::cp.edit')"
-                        size="sm"
-                    />
+                <PanelHeader class="flex items-center min-h-10">
+                    <Heading>{{ __('events::cp.calendar_feed') }}</Heading>
                 </PanelHeader>
 
                 <Card class="flex-1">
-                    <div class="flex flex-wrap gap-2">
-                        <Badge :prepend="__('events::cp.field_type')" :text="event.type" />
-                        <Badge :prepend="__('events::cp.field_status')" :text="event.statusLabel" />
-                        <Badge
-                            :prepend="__('events::cp.field_visibility')"
-                            :text="event.visibilityLabel"
-                        />
-                        <Badge :prepend="__('events::cp.field_timezone')" :text="event.timezone" />
-                    </div>
-
-                    <Subheading class="mt-4">{{ __('events::cp.field_slug') }}</Subheading>
-                    <Description><code class="text-xs">{{ event.slug }}</code></Description>
-
-                    <template v-if="event.description">
-                        <Subheading class="mt-4">{{ __('events::cp.field_description') }}</Subheading>
-                        <Description class="whitespace-pre-line">{{ event.description }}</Description>
-                    </template>
-
-                    <Subheading class="mt-4">{{ __('events::cp.calendar_feed') }}</Subheading>
                     <Description>
                         <a :href="feedUrl" class="break-all">{{ feedUrl }}</a>
                     </Description>
-
                 </Card>
             </Panel>
         </div>
+
+        <OccurrenceStack
+            :url="occurrenceUrl"
+            @closed="occurrenceUrl = null"
+            @saved="savedOccurrence"
+        />
 
         <DocsCallout
             :topic="__('events::cp.title')"

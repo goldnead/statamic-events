@@ -196,10 +196,34 @@ it('hands the Control Panel no configuration and no tokens', function () {
         ->get(cp_route('events.show', ['event' => $event->getKey()]))
         ->assertOk()
         ->assertInertia(function ($page) {
-            $props = json_encode($page->toArray()['props'] ?? []);
+            $props = $page->toArray()['props'] ?? [];
 
-            foreach (['app_key', 'APP_KEY', 'secret', 'token', 'password', 'feeds', 'bridges'] as $forbidden) {
-                expect(str_contains(strtolower($props), strtolower($forbidden)))->toBeFalse(
+            // The one token on this page is core's own, and it has to be here:
+            // a publish form is signed, and `Blueprint::toPublishArray()` puts
+            // the signature in so the submit can be verified against the
+            // blueprint that was actually rendered. Core's PublishForm page
+            // hands the browser exactly the same string. It is lifted out
+            // before the sweep below rather than removed from the list, so a
+            // token from anywhere else still fails.
+            expect($props['form']['blueprint']['token'] ?? null)->toBeString();
+            unset($props['form']['blueprint']['token']);
+
+            $encoded = json_encode($props);
+
+            // `feeds` left this list on 07.09.2026, when the detail screen
+            // became the publish form: the blueprint carries its own field
+            // labels, and one of them says "Public events appear in calendar
+            // feeds". Matching the bare word flagged a sentence meant for the
+            // reader. The config leaves under it are the thing worth watching —
+            // they appear in a leaked config section and nowhere else — so they
+            // took its place and the check got sharper rather than weaker.
+            $needles = [
+                'app_key', 'APP_KEY', 'secret', 'token', 'password',
+                'max_occurrences', 'cache_seconds', 'past_days', 'bridges',
+            ];
+
+            foreach ($needles as $forbidden) {
+                expect(str_contains(strtolower($encoded), strtolower($forbidden)))->toBeFalse(
                     "The Show page hands [{$forbidden}] to the browser."
                 );
             }

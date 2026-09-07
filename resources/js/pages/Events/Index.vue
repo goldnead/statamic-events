@@ -127,14 +127,11 @@ function reload() {
                     />
                 </template>
 
+                <!-- Eine Zeile, ein Ziel. Seit die Detailseite selbst das
+                     Formular ist, waeren "Ansehen" und "Bearbeiten" derselbe
+                     Link mit zwei Namen. -->
                 <template #prepended-row-actions="{ row }">
                     <DropdownItem :text="__('events::cp.view')" icon="eye" :href="row.show_url" />
-                    <DropdownItem
-                        v-if="canCreate"
-                        :text="__('events::cp.edit')"
-                        icon="edit"
-                        :href="row.edit_url"
-                    />
                 </template>
             </Listing>
         </template>

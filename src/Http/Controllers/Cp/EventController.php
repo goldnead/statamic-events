@@ -27,9 +27,10 @@ use Statamic\Query\Scopes\Filters\Concerns\QueriesFilters;
  * search, sort, filter and page change. That is core's own arrangement (see
  * FormsController) and it is why there is no second "data" route.
  *
- * The create/edit forms are `Statamic\CP\PublishForm`, which renders core's own
- * PublishForm page. No Vue is written for them at all, so they cannot drift away
- * from what a Statamic publish form looks like.
+ * The create form is `Statamic\CP\PublishForm`, which renders core's own
+ * PublishForm page. Editing has no page of its own: the detail screen carries
+ * the same blueprint as an editable publish form, the way a collection entry
+ * does. Both paths submit to `store()`/`update()` unchanged.
  *
  * Authorization goes through the Gate on every action, including the read ones.
  * `Gate::authorize()` is used rather than anything read off the authenticated
@@ -111,22 +112,20 @@ class EventController extends Controller
             'event' => [
                 'id' => $model->getKey(),
                 'title' => $model->title,
-                'slug' => $model->slug,
-                'type' => Blueprints::typeOptions($model->type)[$model->type] ?? $model->type,
-                'status' => $model->status->value,
-                'statusLabel' => EventStatus::options()[$model->status->value] ?? $model->status->value,
-                'visibility' => $model->visibility->value,
-                'visibilityLabel' => Visibility::options()[$model->visibility->value] ?? $model->visibility->value,
-                'timezone' => $model->timezone,
-                'description' => $model->description,
             ],
+            // The detail screen *is* the form, the way a collection entry's is.
+            // What used to sit here as read-only key/value pills, with a
+            // "Bearbeiten" button leading to a second screen, is now core's own
+            // publish form on this page: same blueprint, same fields, same save
+            // endpoint. The three keys are exactly what `Statamic\CP\PublishForm`
+            // hands its Vue page, so the screen renders what core would render.
+            'form' => $this->formPayload($model),
             'occurrences' => $model->occurrences->map(fn ($occurrence) => $this->occurrenceRow($occurrence))->values()->all(),
             'occurrenceColumns' => collect($this->occurrenceColumns())->map->toArray()->all(),
             // Row and bulk actions both post here. It is handed over even to a
             // read-only user; the page decides whether to wire it up, and every
             // action authorizes its own items regardless.
             'occurrenceActionUrl' => cp_route('events.occurrences.actions.run'),
-            'editUrl' => cp_route('events.edit', ['event' => $model->getKey()]),
             'deleteUrl' => cp_route('events.destroy', ['event' => $model->getKey()]),
             'indexUrl' => cp_route('events.index'),
             'addOccurrenceUrl' => cp_route('events.occurrences.create', ['event' => $model->getKey()]),
@@ -135,25 +134,38 @@ class EventController extends Controller
         ]);
     }
 
-    public function edit(int $event)
+    /**
+     * The publish form for one event, in the shape core's own PublishForm page
+     * receives it.
+     *
+     * Built here rather than by returning a `Statamic\CP\PublishForm`, because
+     * this form shares its screen with the dates table: the response is one
+     * Inertia page of this addon's, and the form is a part of it. The three
+     * lines below are what `PublishForm::toResponse()` does, and nothing more —
+     * the rendering, the tabs, the sidebar and the save pipeline all stay core's.
+     *
+     * @return array<string, mixed>
+     */
+    private function formPayload(Event $model): array
     {
-        Gate::authorize('manage events');
+        $blueprint = Blueprints::event($model->type);
 
-        $model = Event::query()->findOrFail($event);
+        $fields = $blueprint->fields()->addValues([
+            'title' => $model->title,
+            'slug' => $model->slug,
+            'description' => $model->description,
+            'type' => $model->type,
+            'status' => $model->status->value,
+            'visibility' => $model->visibility->value,
+            'timezone' => $model->timezone,
+        ])->preProcess();
 
-        return PublishForm::make(Blueprints::event($model->type))
-            ->title($model->title)
-            ->icon('calendar')
-            ->values([
-                'title' => $model->title,
-                'slug' => $model->slug,
-                'description' => $model->description,
-                'type' => $model->type,
-                'status' => $model->status->value,
-                'visibility' => $model->visibility->value,
-                'timezone' => $model->timezone,
-            ])
-            ->submittingTo(cp_route('events.update', ['event' => $model->getKey()]));
+        return [
+            'blueprint' => $blueprint->toPublishArray(),
+            'values' => $fields->values()->all(),
+            'meta' => $fields->meta()->all(),
+            'submitUrl' => cp_route('events.update', ['event' => $model->getKey()]),
+        ];
     }
 
     public function update(FilteredRequest $request, int $event)
@@ -394,8 +406,8 @@ class EventController extends Controller
             'status_label' => EventStatus::options()[$event->status->value] ?? $event->status->value,
             'visibility' => $event->visibility->value,
             'visibility_label' => Visibility::options()[$event->visibility->value] ?? $event->visibility->value,
+            // No second URL for editing: the detail screen is the form.
             'show_url' => cp_route('events.show', ['event' => $event->getKey()]),
-            'edit_url' => cp_route('events.edit', ['event' => $event->getKey()]),
         ];
     }
 }

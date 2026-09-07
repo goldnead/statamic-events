@@ -77,6 +77,59 @@ export const Panel = container('section', 'Panel');
 export const PanelHeader = container('div', 'PanelHeader');
 export const Subheading = container('h3', 'Subheading');
 
+/**
+ * Core's Publish-Formular, so weit die Seiten hier es brauchen.
+ *
+ * Der echte Container stellt den Feldern einen Kontext bereit und veroeffentlicht
+ * `visibleValues`, aus denen die Save-Pipeline ihre Nutzlast baut. Der Stub
+ * merkt sich nur die Props und zeigt seinen Slot: was diese Seiten falsch machen
+ * koennen, ist der Blueprint, die Metadaten oder der Nur-Lese-Zustand — nicht die
+ * Feldwiedergabe, die Statamic gehoert.
+ */
+export const PublishContainer = {
+    name: 'PublishContainer',
+    props: ['name', 'blueprint', 'meta', 'errors', 'readOnly', 'modelValue'],
+    setup(props, { slots, attrs }) {
+        return () =>
+            h(
+                'div',
+                {
+                    'data-stub': 'PublishContainer',
+                    'data-name': props.name,
+                    'data-read-only': props.readOnly ? 'true' : 'false',
+                    ...attrs,
+                },
+                slots.default?.()
+            );
+    },
+};
+
+export const PublishTabs = {
+    name: 'PublishTabs',
+    setup(props, { slots }) {
+        return () => h('div', { 'data-stub': 'PublishTabs' }, slots.default?.());
+    },
+};
+
+/**
+ * Der Stack. Der echte faehrt von rechts ein und portaliert sich; hier zaehlt
+ * nur, ob er offen ist, welchen Titel er traegt und was in ihm steht.
+ */
+export const Stack = {
+    name: 'Stack',
+    props: ['open', 'title', 'icon', 'size', 'beforeClose', 'showCloseButton'],
+    emits: ['closed', 'update:open'],
+    setup(props, { slots }) {
+        return () =>
+            props.open
+                ? h('div', { 'data-stub': 'Stack', 'data-title': props.title }, [
+                      slots['header-actions']?.(),
+                      slots.default?.(),
+                  ])
+                : null;
+    },
+};
+
 export const EmptyStateMenu = {
     name: 'EmptyStateMenu',
     props: ['heading'],

@@ -41,7 +41,8 @@ function writeRoutes(Event $event, Occurrence $occurrence): array
     return [
         ['get', cp_route('events.create')],
         ['post', cp_route('events.store')],
-        ['get', cp_route('events.edit', ['event' => $event->getKey()])],
+        // Kein `events.edit`: die Detailseite ist das Formular, sie wird ueber
+        // `events.show` gelesen und ueber `events.update` geschrieben.
         ['patch', cp_route('events.update', ['event' => $event->getKey()])],
         ['delete', cp_route('events.destroy', ['event' => $event->getKey()])],
         ['get', cp_route('events.occurrences.create', ['event' => $event->getKey()])],
@@ -104,7 +105,6 @@ it('opens every route to a user who may manage events', function () {
         ['get', cp_route('events.index')],
         ['get', cp_route('events.show', ['event' => $event->getKey()])],
         ['get', cp_route('events.create')],
-        ['get', cp_route('events.edit', ['event' => $event->getKey()])],
         ['get', cp_route('events.occurrences.create', ['event' => $event->getKey()])],
         ['get', cp_route('events.occurrences.edit', ['occurrence' => $occurrence->getKey()])],
     ] as [$method, $url]) {

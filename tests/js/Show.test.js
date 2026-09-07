@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { flushPromises, mount } from '@vue/test-utils';
 import Show from '../../resources/js/pages/Events/Show.vue';
 import { router } from './stubs/inertia.js';
+import { requests } from './stubs/save-pipeline.js';
+import { dirty } from './stubs/api.js';
 
 const occurrence = {
     id: 1,
@@ -21,19 +23,26 @@ const occurrence = {
     edit_url: '/cp/events/occurrences/1/edit',
 };
 
+// Dieselbe Nutzlast, die core's eigene PublishForm-Seite bekommt — der Server
+// baut sie in EventController::formPayload().
+const form = {
+    blueprint: {
+        tabs: [
+            { handle: 'main', display: 'Details', sections: [{ fields: [{ handle: 'title' }] }] },
+            { handle: 'sidebar', display: 'Settings', sections: [{ fields: [{ handle: 'status' }] }] },
+        ],
+    },
+    values: { title: 'Chorworkshop', slug: 'chorworkshop', status: 'published' },
+    meta: { title: {}, slug: {}, status: {} },
+    submitUrl: '/cp/events/1',
+};
+
 const props = {
     event: {
         id: 1,
         title: 'Chorworkshop',
-        slug: 'chorworkshop',
-        type: 'Workshop',
-        status: 'published',
-        statusLabel: 'Published',
-        visibility: 'public',
-        visibilityLabel: 'Public',
-        timezone: 'Europe/Berlin',
-        description: 'Two days on vowel shaping.',
     },
+    form,
     occurrences: [occurrence],
     occurrenceColumns: [
         { field: 'starts_at', label: 'When', sortable: true, visible: true },
@@ -42,7 +51,6 @@ const props = {
         { field: 'status', label: 'Status', sortable: true, visible: true },
     ],
     occurrenceActionUrl: '/cp/events/occurrences/actions',
-    editUrl: '/cp/events/1/edit',
     deleteUrl: '/cp/events/1',
     indexUrl: '/cp/events',
     addOccurrenceUrl: '/cp/events/1/occurrences/create',
@@ -52,7 +60,26 @@ const props = {
 
 const listing = (wrapper) => wrapper.findComponent({ name: 'Listing' });
 
-beforeEach(() => router.reset());
+// Der Datums-Stack holt sein Formular ueber `fetch`. Ohne Antwort bleibt der
+// Stack leer, und jeder Test darueber wuerde das Falsche belegen.
+const occurrenceForm = {
+    title: 'Datum hinzufuegen',
+    blueprint: { tabs: [{ handle: 'main', display: 'Date', sections: [{ fields: [{ handle: 'starts_at' }] }] }] },
+    values: { starts_at: null },
+    meta: { starts_at: {} },
+    submitUrl: '/cp/events/1/occurrences',
+    submitMethod: 'POST',
+};
+
+beforeEach(() => {
+    router.reset();
+    requests.reset();
+    dirty.reset();
+
+    globalThis.fetch = vi.fn(() =>
+        Promise.resolve({ ok: true, json: () => Promise.resolve(occurrenceForm) })
+    );
+});
 
 describe('the event detail page', () => {
     it('shows the dates in core listing rather than a stack of cards', () => {
@@ -160,12 +187,110 @@ describe('the event detail page', () => {
         expect(listing(wrapper).exists()).toBe(false);
         expect(wrapper.find('[data-stub="EmptyStateMenu"]').exists()).toBe(true);
         expect(wrapper.text()).toContain('events::cp.no_dates');
-        expect(wrapper.find('[data-stub="EmptyStateItem"]').attributes('href')).toBe(
-            '/cp/events/1/occurrences/create'
-        );
+        // Kein `href` mehr: der Einstieg oeffnet den Stack, statt auf eine
+        // eigene Seite zu navigieren.
+        expect(wrapper.find('[data-stub="EmptyStateItem"]').attributes('href')).toBeUndefined();
     });
 
     it('shows the subscribable feed URL, because that is what people actually copy', () => {
         expect(mount(Show, { props }).text()).toContain('/!/events/calendar.ics');
+    });
+
+    it('is the form itself rather than a read-only card with an edit button', () => {
+        // F02: vorher standen hier Schluessel-Wert-Paare und ein Knopf auf eine
+        // zweite Seite. Jetzt traegt die Seite den Blueprint, den auch der
+        // Speichern-Weg benutzt.
+        const wrapper = mount(Show, { props });
+        const container = wrapper.findComponent({ name: 'PublishContainer' });
+
+        expect(container.exists()).toBe(true);
+        expect(container.props('blueprint')).toStrictEqual(form.blueprint);
+        expect(container.props('meta')).toStrictEqual(form.meta);
+        expect(container.props('readOnly')).toBe(false);
+        expect(wrapper.findComponent({ name: 'PublishTabs' }).exists()).toBe(true);
+    });
+
+    it('saves the event through core save pipeline, to the URL the server named', async () => {
+        // Nicht ueber einen eigenen axios-Aufruf: die Pipeline besitzt den
+        // Fehler-Toast, die 422-Feldfehler und den Dirty-Zustand.
+        const wrapper = mount(Show, { props });
+
+        await wrapper
+            .findAll('[data-stub="Button"]')
+            .find((button) => button.text() === 'Save')
+            .trigger('click');
+
+        expect(requests.calls).toEqual([{ url: '/cp/events/1', method: 'patch' }]);
+    });
+
+    it('shows a read-only user the same fields, without the way to save them', () => {
+        // Eine zweite, lesende Darstellung derselben Werte waere eine zweite
+        // Wahrheit — es sind dieselben Felder, nur gesperrt.
+        const wrapper = mount(Show, { props: { ...props, canManage: false } });
+
+        expect(wrapper.findComponent({ name: 'PublishContainer' }).props('readOnly')).toBe(true);
+        expect(wrapper.findAll('[data-stub="Button"]').some((b) => b.text() === 'Save')).toBe(false);
+    });
+
+    it('opens a date in a stack instead of navigating to a page of its own', async () => {
+        // F05: "Datum hinzufuegen" fuehrte auf eine eigene Seite. Adrians
+        // Rangfolge: ein Stack ist der Kompromiss, eine Extraseite ist es nie.
+        const wrapper = mount(Show, { props });
+
+        expect(wrapper.find('[data-stub="Stack"]').exists()).toBe(false);
+
+        await wrapper
+            .findAll('[data-stub="Button"]')
+            .find((button) => button.text() === 'events::cp.add_date_short')
+            .trigger('click');
+
+        await flushPromises();
+
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+            '/cp/events/1/occurrences/create',
+            expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) })
+        );
+        expect(wrapper.find('[data-stub="Stack"]').attributes('data-title')).toBe('Datum hinzufuegen');
+        expect(router.calls).toEqual([]);
+    });
+
+    it('edits a date in the same stack, from the URL the row carries', async () => {
+        const wrapper = mount(Show, { props });
+
+        await wrapper
+            .findAll('[data-stub="DropdownItem"]')
+            .find((item) => item.text() === 'events::cp.edit')
+            .trigger('click');
+
+        await flushPromises();
+
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+            '/cp/events/occurrences/1/edit',
+            expect.anything()
+        );
+        expect(wrapper.find('[data-stub="Stack"]').exists()).toBe(true);
+    });
+
+    it('reloads the dates after the stack saved, so the table shows what was written', async () => {
+        const wrapper = mount(Show, { props });
+
+        await wrapper
+            .findAll('[data-stub="Button"]')
+            .find((button) => button.text() === 'events::cp.add_date_short')
+            .trigger('click');
+
+        await flushPromises();
+
+        await wrapper
+            .find('[data-stub="Stack"]')
+            .findAll('button')
+            .find((button) => button.text() === 'Save')
+            .trigger('click');
+
+        await flushPromises();
+
+        expect(requests.calls).toEqual([{ url: '/cp/events/1/occurrences', method: 'POST' }]);
+        expect(router.calls).toEqual([{ method: 'reload', options: { preserveScroll: true } }]);
+        expect(wrapper.find('[data-stub="Stack"]').exists()).toBe(false);
     });
 });
