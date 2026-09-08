@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Statamic\Facades\User;
 
 /**
  * A thing that happens, described once.
@@ -89,9 +90,62 @@ class Event extends Model
         });
     }
 
+    /**
+     * Die Zeitzone, mit der ein neuer Termin startet.
+     *
+     * Vier Quellen, von der naechsten zur fernsten. Nur eine Vorbelegung: das
+     * Feld bleibt aenderbar, und bestehende Termine fasst niemand an.
+     *
+     * 1. **Die des angemeldeten Benutzers**, falls der Betrieb seinem
+     *    Benutzer-Blueprint ein Feld `timezone` gegeben hat. Statamic fuehrt
+     *    von sich aus keine Zeitzone je Benutzer — es gibt keine Eigenschaft
+     *    dafuer und keine Voreinstellung im Kern —, also ist das hier eine
+     *    Einladung und keine Annahme: wer das Feld anlegt, wird gelesen, wer
+     *    nicht, merkt nichts.
+     * 2. **Die des Addons** (`events.defaults.timezone`), weil sie jemand
+     *    ausdruecklich fuer Termine gesetzt hat.
+     * 3. **Die der Seite** (`statamic.system.display_timezone`), die Statamic
+     *    fuer die Anzeige von Daten im Frontend benutzt. Das ist die Zeitzone,
+     *    in der die Seite ohnehin ueber Zeiten spricht.
+     * 4. `app.timezone`, sonst UTC.
+     *
+     * Der Wert des Benutzers wird geprueft, nicht geglaubt: in einem freien
+     * Textfeld steht irgendwann „MEZ", und eine ungueltige Zeitzone in einem
+     * Pflichtfeld ist ein Formular, das sich nicht abschicken laesst, ohne zu
+     * sagen warum.
+     */
     public static function defaultTimezone(): string
     {
-        return config('events.defaults.timezone') ?: config('app.timezone') ?: 'UTC';
+        $vomBenutzer = self::timezoneOfCurrentUser();
+
+        return $vomBenutzer
+            ?: config('events.defaults.timezone')
+            ?: config('statamic.system.display_timezone')
+            ?: config('app.timezone')
+            ?: 'UTC';
+    }
+
+    protected static function timezoneOfCurrentUser(): ?string
+    {
+        $user = User::current();
+
+        // Gefragt wird die Methode, nicht der Typ. `get()` steht auf jeder
+        // Benutzer-Klasse, die Statamic mitbringt, aber nicht auf dem
+        // Interface — und ein Betrieb darf seine eigene einsetzen. Dieselbe
+        // Pruefung, die die Katalog-Bruecke nebenan fuer ihr Geschwister macht.
+        if (! $user || ! method_exists($user, 'get')) {
+            return null;
+        }
+
+        $zone = $user->get('timezone');
+
+        if (! is_string($zone) || trim($zone) === '') {
+            return null;
+        }
+
+        $zone = trim($zone);
+
+        return in_array($zone, timezone_identifiers_list(), true) ? $zone : null;
     }
 
     /** @return HasMany<Occurrence, $this> */

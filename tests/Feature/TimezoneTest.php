@@ -3,6 +3,8 @@
 use Carbon\CarbonImmutable;
 use Goldnead\Events\Models\Event;
 use Goldnead\Events\Models\Occurrence;
+use Goldnead\Events\Support\Blueprints;
+use Statamic\Facades\User;
 
 /*
  * The whole point of this file: the suite runs with app.timezone =
@@ -89,4 +91,64 @@ it('falls back to the event\'s zone and then to the configured default', functio
     config()->set('events.defaults.timezone', 'Europe/Lisbon');
 
     expect(Event::defaultTimezone())->toBe('Europe/Lisbon');
+});
+
+/*
+ * Womit ein neuer Termin startet. Nur eine Vorbelegung — das Feld bleibt
+ * aenderbar, und bestehende Termine fasst keiner dieser Faelle an.
+ */
+
+it('prefers the zone of the person filling the form in', function () {
+    config()->set('events.defaults.timezone', 'Europe/Lisbon');
+    config()->set('statamic.system.display_timezone', 'Europe/Berlin');
+
+    $user = tap(User::make()->email('kim@example.com')->makeSuper())->save();
+    $user->set('timezone', 'Asia/Tokyo')->save();
+
+    $this->actingAs($user);
+
+    expect(Event::defaultTimezone())->toBe('Asia/Tokyo');
+});
+
+it('ignores a user zone that is not a real zone', function () {
+    config()->set('events.defaults.timezone', 'Europe/Lisbon');
+
+    // In einem freien Textfeld steht irgendwann „MEZ". Eine ungueltige Zone in
+    // einem Pflichtfeld ist ein Formular, das sich nicht abschicken laesst,
+    // ohne zu sagen warum.
+    $user = tap(User::make()->email('kim@example.com')->makeSuper())->save();
+    $user->set('timezone', 'MEZ')->save();
+
+    $this->actingAs($user);
+
+    expect(Event::defaultTimezone())->toBe('Europe/Lisbon');
+});
+
+it('falls back to the timezone the site displays dates in', function () {
+    // Statamic fuehrt keine Zeitzone je Seite ausser dieser: sie ist die, in
+    // der die Seite im Frontend ohnehin ueber Zeiten spricht.
+    config()->set('events.defaults.timezone', null);
+    config()->set('statamic.system.display_timezone', 'Europe/Berlin');
+
+    expect(Event::defaultTimezone())->toBe('Europe/Berlin');
+});
+
+it('falls back to the application timezone when nobody said', function () {
+    config()->set('events.defaults.timezone', null);
+    config()->set('statamic.system.display_timezone', null);
+
+    expect(Event::defaultTimezone())->toBe('America/Chicago');
+});
+
+it('offers the six shipped types and keeps one that was removed from config', function () {
+    expect(array_keys(Blueprints::typeOptions()))
+        ->toBe(['workshop', 'masterclass', 'concert', 'rehearsal', 'course_session', 'other']);
+
+    // Der gespeicherte Wert ist eine freie Zeichenkette. Ein Typ, den jemand
+    // aus der Config nimmt, darf einen bestehenden Termin nicht unlesbar
+    // machen — er wird weiter angeboten, solange dieser Termin ihn traegt.
+    config()->set('events.types', ['concert' => 'Concert']);
+
+    expect(Blueprints::typeOptions('workshop'))
+        ->toBe(['concert' => 'Concert', 'workshop' => 'workshop']);
 });

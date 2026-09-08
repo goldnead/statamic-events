@@ -6,6 +6,35 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [2.5.0] — 2026-09-08
+
+### Changed: a new event starts in the timezone of the person filling the form in
+
+The timezone field was prefilled from `events.defaults.timezone` and then from `app.timezone`, which
+on most installs means UTC — so an editor in Frankfurt typed 19:00 and got 19:00 UTC unless they
+remembered to change a field they had no reason to look at.
+
+Four sources now, nearest first:
+
+1. **The logged-in user's**, if the install gave its user blueprint a `timezone` field. Statamic
+   carries no per-user timezone of its own — there is no property for it and no preference in the
+   core — so this is an invitation rather than an assumption: an install that adds the field is
+   read, one that does not notices nothing.
+2. The addon's own `events.defaults.timezone`, because somebody set it for events specifically.
+3. `statamic.system.display_timezone`, the zone the site already speaks about times in.
+4. `app.timezone`, else UTC.
+
+The user's value is checked rather than believed — a free text field eventually contains "MEZ", and
+an invalid zone in a required field is a form that will not submit without saying why. Prefill only:
+the field stays editable and **existing events are untouched**.
+
+### Documented: the event types were already configurable
+
+`config('events.types')` has driven the list since the type field was built, with the six shipped
+values as its default and a host free to replace them; a type removed from the config keeps being
+offered on an event that still carries it, because the stored value is a free string. That was true
+and untested, which is the same thing as unpromised — there is now a test for both halves.
+
 ## [2.4.0] — 2026-09-08
 
 ### Changed: the events listing shows an empty state instead of HTTP 500 when its tables are missing
