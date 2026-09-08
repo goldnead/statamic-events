@@ -11,13 +11,13 @@ config keys and facade methods are part of the public API from the first release
 ### Changed: the event detail screen is the form
 
 The screen used to be read-only. Type, status, visibility, timezone, slug and description sat in a
-grey card as key/value pills, and a "Bearbeiten" button led to a second screen carrying the same
+grey card as key/value pills, and an "Edit" button led to a second screen carrying the same
 blueprint. A collection entry has no such break: what is on the screen is the field, and Save sits
 top right. This screen now works the same way — same blueprint, same `PATCH /cp/events/{event}`,
 core's own `PublishContainer` and tabs, with the sidebar coming from the blueprint's `sidebar` tab.
 
-`GET /cp/events/{event}/edit` is gone with it, and so is the "Bearbeiten" row action on the events
-listing: it would have been the same link as "Ansehen" under a second name. Anything linking to the
+`GET /cp/events/{event}/edit` is gone with it, and so is the "Edit" row action on the events
+listing: it would have been the same link as "View" under a second name. Anything linking to the
 edit URL should link to the event's own screen.
 
 The calendar feed URL keeps a panel of its own below the dates. It is not a field of the event — it
@@ -25,13 +25,13 @@ belongs to the installation — and it is the only place in the Control Panel th
 
 ### Changed: dates are edited in a stack, not on a page of their own
 
-"Datum hinzufügen" and "Bearbeiten" on a single date opened a separate screen and navigated away
+"Add date" and "Edit" on a single date opened a separate screen and navigated away
 from the event. Both now open a stack over the event. The two routes are unchanged and still answer
 an ordinary request; the stack asks them for JSON, which is what `Statamic\CP\PublishForm` hands its
 own Vue page. Saving goes through core's save pipeline, so the error toast, the 422 field errors and
 the dirty-state guard are core's rather than rebuilt here.
 
-### Added: a settings screen under Control Panel → Addon-Einstellungen
+### Added: a settings screen under Control Panel → Addon Settings
 
 Eight keys are editable per brand without a deploy: the timezone and visibility a new event starts
 with, the five calendar feed keys, and the listing page size. Everything not changed keeps following
