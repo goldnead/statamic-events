@@ -28,6 +28,14 @@ The user's value is checked rather than believed — a free text field eventuall
 an invalid zone in a required field is a form that will not submit without saying why. Prefill only:
 the field stays editable and **existing events are untouched**.
 
+**The person is read where a person fills a form in, and nowhere else.** The `creating` hook on the
+model fires on every path that makes a row — a seeder, an import, a queue job, a command that happens
+to run while somebody is signed in — and it falls back to the configured chain alone. Had it read the
+current user there, every imported row would be stamped with whoever was logged in at the time, and
+two identical import runs by two admins would produce different results, silently, showing up only
+as a start time that reads wrong. Those are two different questions: what a form opens with may know
+who is looking, what gets stored when nobody said anything may not.
+
 ### Documented: the event types were already configurable
 
 `config('events.types')` has driven the list since the type field was built, with the six shipped

@@ -140,6 +140,28 @@ it('falls back to the application timezone when nobody said', function () {
     expect(Event::defaultTimezone())->toBe('America/Chicago');
 });
 
+it('does not stamp the logged-in person\'s zone onto a row created outside a form', function () {
+    // Der Haken beim Anlegen feuert auf jedem Weg — Seeder, Import,
+    // Queue-Job. Laese er die persoenliche Zone des zufaellig angemeldeten
+    // Benutzers, erzeugten zwei gleiche Importlaeufe zweier Admins
+    // verschiedene Ergebnisse, ohne Meldung, sichtbar erst als falsch
+    // angezeigte Startzeit.
+    config()->set('events.defaults.timezone', 'Europe/Lisbon');
+
+    $user = tap(User::make()->email('kim@example.com')->makeSuper())->save();
+    $user->set('timezone', 'Asia/Tokyo')->save();
+
+    $this->actingAs($user);
+
+    $event = Event::factory()->create(['timezone' => null]);
+
+    expect($event->fresh()->timezone)->toBe('Europe/Lisbon');
+
+    // Das Formular darf die Person weiter kennen — die beiden Fragen sind
+    // verschieden, und nur eine davon schreibt.
+    expect(Event::defaultTimezone())->toBe('Asia/Tokyo');
+});
+
 it('offers the six shipped types and keeps one that was removed from config', function () {
     expect(array_keys(Blueprints::typeOptions()))
         ->toBe(['workshop', 'masterclass', 'concert', 'rehearsal', 'course_session', 'other']);

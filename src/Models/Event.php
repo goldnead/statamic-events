@@ -76,7 +76,21 @@ class Event extends Model
             $event->type ??= 'other';
             $event->visibility ??= config('events.defaults.visibility', 'public');
             $event->status ??= EventStatus::Draft->value;
-            $event->timezone = $event->timezone ?: static::defaultTimezone();
+            // **Ohne den Benutzer**, und das ist der Unterschied zwischen
+            // einem Formular-Default und einem harten Rueckfall.
+            //
+            // Dieser Haken feuert auf **jedem** Weg, der eine Zeile anlegt:
+            // Seeder, Import, Queue-Job, ein Kommando, das zufaellig in einem
+            // angemeldeten Kontext laeuft. Faende er hier die persoenliche
+            // Zeitzone des gerade angemeldeten Benutzers, bekaeme jede
+            // importierte Zeile sie aufgestempelt — und zwei gleiche
+            // Importlaeufe zweier Admins erzeugten verschiedene Ergebnisse,
+            // ohne Meldung, sichtbar erst als falsch angezeigte Startzeit.
+            //
+            // Die Vorbelegung aus der Zeitzone des Menschen gehoert dorthin,
+            // wo ein Mensch ein Formular ausfuellt, und dort steht sie auch
+            // ({@see \Goldnead\Events\Http\Controllers\Cp\EventController}).
+            $event->timezone = $event->timezone ?: static::configuredTimezone();
         });
 
         // Fired from `saved` rather than `saving`, so a listener sees the row as
@@ -116,10 +130,21 @@ class Event extends Model
      */
     public static function defaultTimezone(): string
     {
-        $vomBenutzer = self::timezoneOfCurrentUser();
+        return self::timezoneOfCurrentUser() ?: self::configuredTimezone();
+    }
 
-        return $vomBenutzer
-            ?: config('events.defaults.timezone')
+    /**
+     * Dasselbe ohne die Person: die drei Quellen, die auf jedem Weg dieselbe
+     * Antwort geben.
+     *
+     * Getrennt, weil die beiden Fragen verschieden sind. „Womit fuellt sich
+     * dieses Formular vor" darf die Person kennen; „was steht in dieser Zeile,
+     * wenn niemand etwas gesagt hat" darf es nicht, sonst haengt ein
+     * gespeicherter Wert daran, wer zufaellig angemeldet war.
+     */
+    protected static function configuredTimezone(): string
+    {
+        return config('events.defaults.timezone')
             ?: config('statamic.system.display_timezone')
             ?: config('app.timezone')
             ?: 'UTC';
