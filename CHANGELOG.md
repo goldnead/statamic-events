@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
-## [Unreleased]
+## [2.3.0] — 2026-09-07
 
 ### Changed: the event detail screen is the form
 
@@ -38,9 +38,20 @@ with, the five calendar feed keys, and the listing page size. Everything not cha
 `config/events.php`, so an upgrade still moves the defaults.
 
 Screen, form, validation, store and permission check come from
-`goldnead/statamic-brand-context` (now required at `^1.12`); this package contributes the field list
+`goldnead/statamic-brand-context` (now required at `^1.13`); this package contributes the field list
 in `Goldnead\Events\Support\Settings` and one new permission, `manage events settings`. The two
 existing permissions are untouched.
+
+The new permission is held by nobody until it is given to a role: until then the section is
+invisible, including to users who may do everything else with this addon.
+
+**The `^1.13` floor is not cosmetic.** Older releases carry the screen but do not apply its values
+reliably. On a single-brand install the settings of the addons that registered last were not
+applied at all — the screen showed the stored value after a reload while `config()` kept answering
+with the packaged one, and the brand switch that would have caught up never happens where there is
+one brand. And up to 1.12 a second save of the same section deleted the override made by the first,
+without a message. Anyone who set values between 06.09. and this update should check the screen
+afterwards: lost values do not come back on their own.
 
 Three keys are deliberately not on the screen, and the group descriptions say so: `cp.enabled` and
 `bridges.activity` are read while the application boots, so a switch here would only take effect on
