@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [2.4.0] — 2026-09-08
+
+### Changed: the events listing shows an empty state instead of HTTP 500 when its tables are missing
+
+The addon can be installed without its migrations having run — composer pulls the package in, the
+nav item appears, and `events` and `event_occurrences` still do not exist. The listing asks both
+tables a question while the page is being built (it counts each event's dates with
+`withCount('occurrences')`), so the visitor got HTTP 500 and a stack trace for what is really an
+unfinished setup. The listing now checks before its first query and renders a setup screen that
+names the missing tables and says to run `php artisan migrate`.
+
+The reason does not vanish with the 500: the guarded page writes to the log why it turned somebody
+away. Otherwise the site would look installed and never work.
+
 ## [2.3.0] — 2026-09-07
 
 ### Changed: the event detail screen is the form
