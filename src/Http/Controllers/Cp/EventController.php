@@ -9,6 +9,7 @@ use Goldnead\Events\Models\Event;
 use Goldnead\Events\Models\Occurrence;
 use Goldnead\Events\Query\Scopes\Filters\EventFilter;
 use Goldnead\Events\Support\Blueprints;
+use Goldnead\Events\Support\Setup;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
@@ -50,6 +51,14 @@ class EventController extends Controller
     public function index(FilteredRequest $request)
     {
         Gate::authorize('view events');
+
+        // Both tables, and before the JSON branch below because that one
+        // queries too: the listing counts each event's dates with
+        // `withCount('occurrences')`, so `event_occurrences` is touched while
+        // the page is built even though no date is shown on its own row.
+        if ($setup = Setup::guard(__('events::cp.title'), 'events', 'event_occurrences')) {
+            return $setup;
+        }
 
         if ($request->wantsJson()) {
             return $this->listing($request);

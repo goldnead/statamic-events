@@ -16,6 +16,9 @@ return [
     'delete_event_confirm' => 'Deleting the event deletes all of its dates. Anyone who has subscribed to a calendar keeps the dates they already imported.',
     'back_to_events' => 'All events',
 
+    'setup_required_heading' => 'This page needs its database tables, and they are not there yet.',
+    'setup_required_description' => 'Run `php artisan migrate` and the page loads as usual. The reason is in the log as well.',
+
     'dates' => 'Dates',
     'no_dates' => 'This event has no dates yet.',
     'no_upcoming' => 'No upcoming date',

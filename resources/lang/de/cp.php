@@ -16,6 +16,9 @@ return [
     'delete_event_confirm' => 'Mit dem Termin werden alle Datumsangaben gelöscht. Wer den Kalender abonniert hat, behält die bereits importierten Daten.',
     'back_to_events' => 'Alle Termine',
 
+    'setup_required_heading' => 'Diese Seite braucht ihre Datenbanktabellen, und die gibt es noch nicht.',
+    'setup_required_description' => 'Führe `php artisan migrate` aus, danach lädt die Seite normal. Der Grund steht auch im Log.',
+
     'dates' => 'Datumsangaben',
     'no_dates' => 'Für diesen Termin ist noch kein Datum eingetragen.',
     'no_upcoming' => 'Kein kommendes Datum',

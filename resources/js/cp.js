@@ -1,6 +1,7 @@
 import { inertia } from '@statamic/cms/api';
 
 import Index from './pages/Events/Index.vue';
+import SetupRequired from './pages/SetupRequired.vue';
 import Show from './pages/Events/Show.vue';
 
 /*
@@ -16,4 +17,5 @@ import Show from './pages/Events/Show.vue';
 Statamic.booting(() => {
     inertia.register('events::Events/Index', Index);
     inertia.register('events::Events/Show', Show);
+    inertia.register('events::SetupRequired', SetupRequired);
 });
