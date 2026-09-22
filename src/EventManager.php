@@ -131,13 +131,13 @@ class EventManager
         // A date is only as visible as its event. Expressed as a subquery
         // constraint rather than a join so the brand scope on both models keeps
         // applying — a join would let a caller widen it by accident.
-        // whereHas() hands the closure a `Builder<Model>` because that is all its
-        // own signature promises. At runtime it is the related model's builder —
-        // an Event's — which is what constrainEvents() needs and what the
-        // relationship above guarantees. One narrow, stated suppression rather
-        // than a baseline entry that would also hide the next one.
+        //
+        // This used to carry a narrow argument-type suppression: whereHas()
+        // promised the closure only a `Builder<Model>` while it hands over the
+        // related model's builder, an Event's. Larastan infers the related model
+        // now, so the suppression stopped matching and the config rightly
+        // refuses one that no longer suppresses anything.
         $query->whereHas('event', function ($events) use ($filters): void {
-            /** @phpstan-ignore argument.type (whereHas passes the Event builder; the generic says Model) */
             $this->constrainEvents($events, $filters);
         });
 
