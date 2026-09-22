@@ -174,7 +174,8 @@ class Blueprints
                         ],
                         [
                             'display' => __('events::cp.section_location'),
-                            'instructions' => __('events::cp.section_location_instructions'),
+                            'instructions' => __('events::cp.section_location_instructions')
+                                .' '.__('events::cp.section_location_geo_instructions'),
                             'fields' => [
                                 [
                                     'handle' => 'venue_name',
@@ -197,8 +198,11 @@ class Blueprints
                                     'field' => [
                                         'type' => 'text',
                                         'display' => __('events::cp.field_venue_postal_code'),
-                                        'instructions' => __('events::cp.field_venue_postal_code_instructions'),
-                                        'width' => 25,
+                                        // Der Hinweis steht bewusst NICHT hier: eine
+                                        // Erklaerung in einer schmalen Spalte umbricht in
+                                        // sechs Zeilen und schiebt das Eingabefeld unter
+                                        // das seines Nachbarn. Er steht am Abschnitt.
+                                        'width' => 50,
                                         'validate' => ['nullable', 'max:16'],
                                     ],
                                 ],
@@ -207,7 +211,7 @@ class Blueprints
                                     'field' => [
                                         'type' => 'text',
                                         'display' => __('events::cp.field_venue_city'),
-                                        'width' => 75,
+                                        'width' => 50,
                                         'validate' => ['nullable', 'max:191'],
                                     ],
                                 ],
@@ -226,8 +230,7 @@ class Blueprints
                                     'field' => [
                                         'type' => 'text',
                                         'display' => __('events::cp.field_venue_latitude'),
-                                        'instructions' => __('events::cp.field_coordinates_instructions'),
-                                        'width' => 25,
+                                        'width' => 50,
                                         'validate' => ['nullable', 'numeric', 'between:-90,90'],
                                     ],
                                 ],
@@ -236,7 +239,7 @@ class Blueprints
                                     'field' => [
                                         'type' => 'text',
                                         'display' => __('events::cp.field_venue_longitude'),
-                                        'width' => 25,
+                                        'width' => 50,
                                         'validate' => ['nullable', 'numeric', 'between:-180,180'],
                                     ],
                                 ],
