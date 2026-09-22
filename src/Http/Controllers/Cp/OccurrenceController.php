@@ -71,8 +71,13 @@ class OccurrenceController extends Controller
                 'status' => $model->status->value,
                 'venue_name' => $model->venue_name,
                 'venue_address' => $model->venue_address,
+                'venue_postal_code' => $model->venue_postal_code,
                 'venue_city' => $model->venue_city,
                 'venue_country' => $model->venue_country,
+                'venue_latitude' => $model->venue_latitude,
+                'venue_longitude' => $model->venue_longitude,
+                'tickets_url' => $model->tickets_url,
+                'is_free' => (bool) $model->is_free,
                 'online_url' => $model->online_url,
             ])
             ->submittingTo(cp_route('events.occurrences.update', ['occurrence' => $model->getKey()]));
@@ -167,8 +172,14 @@ class OccurrenceController extends Controller
             'all_day' => false,
             'venue_name' => $previous?->venue_name,
             'venue_address' => $previous?->venue_address,
+            'venue_postal_code' => $previous?->venue_postal_code,
             'venue_city' => $previous?->venue_city,
             'venue_country' => $previous?->venue_country,
+            'venue_latitude' => $previous?->venue_latitude,
+            'venue_longitude' => $previous?->venue_longitude,
+            // Absichtlich NICHT vorbelegt: ein Ticket-Link gilt fuer genau
+            // einen Abend. Den vom Vorgaenger zu uebernehmen schickt das
+            // Publikum an die falsche Kasse.
             'online_url' => $previous?->online_url,
         ];
     }
@@ -194,10 +205,27 @@ class OccurrenceController extends Controller
             'timezone' => $this->single($values['timezone'] ?? null),
             'venue_name' => $values['venue_name'] ?? null,
             'venue_address' => $values['venue_address'] ?? null,
+            'venue_postal_code' => $values['venue_postal_code'] ?? null,
             'venue_city' => $values['venue_city'] ?? null,
             'venue_country' => $this->single($values['venue_country'] ?? null),
+            'venue_latitude' => $this->coordinate($values['venue_latitude'] ?? null),
+            'venue_longitude' => $this->coordinate($values['venue_longitude'] ?? null),
+            'tickets_url' => $values['tickets_url'] ?? null,
+            'is_free' => (bool) ($values['is_free'] ?? false),
             'online_url' => $values['online_url'] ?? null,
         ];
+    }
+
+    /**
+     * A coordinate the form gave back, or null.
+     *
+     * An empty text field arrives as '' and must not become 0 — a venue on the
+     * null island off the coast of Africa looks like a real answer to a radius
+     * query, and nobody reports it.
+     */
+    private function coordinate(mixed $value): ?string
+    {
+        return is_numeric($value) ? (string) $value : null;
     }
 
     private function fromFieldValue(mixed $value): ?CarbonImmutable
