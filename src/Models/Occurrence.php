@@ -34,6 +34,11 @@ use Illuminate\Support\Str;
  * @property CarbonImmutable $starts_at
  * @property CarbonImmutable|null $ends_at
  * @property bool $all_day
+ * @property string|null $venue_postal_code
+ * @property string|null $venue_latitude
+ * @property string|null $venue_longitude
+ * @property string|null $tickets_url
+ * @property bool $is_free
  * @property string|null $timezone
  * @property OccurrenceStatus $status
  * @property CarbonImmutable|null $cancelled_at
@@ -58,6 +63,7 @@ class Occurrence extends Model
 
     protected $casts = [
         'all_day' => 'boolean',
+        'is_free' => 'boolean',
         'status' => OccurrenceStatus::class,
         'sequence' => 'integer',
     ];

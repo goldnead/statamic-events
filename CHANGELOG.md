@@ -6,6 +6,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [Unreleased]
+
+### Added: a date can say where it is on a map, and how to get in
+
+`venue_city` answers "where is it" for a reader. It does not answer "is this within 50 km of me",
+which is the question a regional invitation asks before it is sent and the one a map asks before it
+draws a pin. Occurrences now carry `venue_postal_code`, `latitude` and `longitude`, indexed as
+`(brand_id, latitude, longitude)` so a bounding box can narrow before anything is measured. The
+postal code is a string: Austria writes `A-1070`, the Netherlands `1011 AB`, and every five-digit
+assumption breaks on the first concert across the border. The radius query itself is not here — it
+belongs to whoever asks the distance question.
+
+Ticketing rides along, because it is the same question about the same date. `tickets_url` and
+`is_free` sit on the occurrence rather than the event: a tour sells each night separately, and an
+event-level link would send everybody to the wrong night. `is_free` exists so that a missing link
+reads as "free" instead of as "we forgot the link".
+
+### Fixed: the index-width guard no longer calls a DECIMAL unindexable
+
+`tests/Unit/IndexKeyLengthTest.php` measured every column type it knew and reported the rest as
+wider than InnoDB allows, which is right for `text` and `json` and wrong for `decimal`. A
+`decimal(10,7)` occupies six bytes, not 3073, and the guard rejected the coordinate index at 6154
+bytes against a 3072 limit. It now packs DECIMAL the way MySQL does, four bytes per nine digits
+plus a tail on each side of the point, and knows `float` and `double` too.
+
 ## [2.5.0] — 2026-09-08
 
 ### Changed: a new event starts in the timezone of the person filling the form in

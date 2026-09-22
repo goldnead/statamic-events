@@ -193,11 +193,21 @@ class Blueprints
                                     ],
                                 ],
                                 [
+                                    'handle' => 'venue_postal_code',
+                                    'field' => [
+                                        'type' => 'text',
+                                        'display' => __('events::cp.field_venue_postal_code'),
+                                        'instructions' => __('events::cp.field_venue_postal_code_instructions'),
+                                        'width' => 25,
+                                        'validate' => ['nullable', 'max:16'],
+                                    ],
+                                ],
+                                [
                                     'handle' => 'venue_city',
                                     'field' => [
                                         'type' => 'text',
                                         'display' => __('events::cp.field_venue_city'),
-                                        'width' => 50,
+                                        'width' => 75,
                                         'validate' => ['nullable', 'max:191'],
                                     ],
                                 ],
@@ -212,6 +222,25 @@ class Blueprints
                                     ],
                                 ],
                                 [
+                                    'handle' => 'venue_latitude',
+                                    'field' => [
+                                        'type' => 'text',
+                                        'display' => __('events::cp.field_venue_latitude'),
+                                        'instructions' => __('events::cp.field_coordinates_instructions'),
+                                        'width' => 25,
+                                        'validate' => ['nullable', 'numeric', 'between:-90,90'],
+                                    ],
+                                ],
+                                [
+                                    'handle' => 'venue_longitude',
+                                    'field' => [
+                                        'type' => 'text',
+                                        'display' => __('events::cp.field_venue_longitude'),
+                                        'width' => 25,
+                                        'validate' => ['nullable', 'numeric', 'between:-180,180'],
+                                    ],
+                                ],
+                                [
                                     'handle' => 'online_url',
                                     'field' => [
                                         'type' => 'text',
@@ -219,6 +248,30 @@ class Blueprints
                                         'display' => __('events::cp.field_online_url'),
                                         'instructions' => __('events::cp.field_online_url_instructions'),
                                         'validate' => ['nullable', 'url', 'max:512'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        [
+                            'display' => __('events::cp.section_tickets'),
+                            'instructions' => __('events::cp.section_tickets_instructions'),
+                            'fields' => [
+                                [
+                                    'handle' => 'tickets_url',
+                                    'field' => [
+                                        'type' => 'text',
+                                        'input_type' => 'url',
+                                        'display' => __('events::cp.field_tickets_url'),
+                                        'validate' => ['nullable', 'url', 'max:512'],
+                                    ],
+                                ],
+                                [
+                                    'handle' => 'is_free',
+                                    'field' => [
+                                        'type' => 'toggle',
+                                        'display' => __('events::cp.field_is_free'),
+                                        'instructions' => __('events::cp.field_is_free_instructions'),
+                                        'default' => false,
                                     ],
                                 ],
                             ],
