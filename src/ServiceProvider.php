@@ -36,9 +36,8 @@ class ServiceProvider extends AddonServiceProvider
      * Untyped on purpose: the parent declares it without a type, and PHP refuses
      * a child that narrows one. The parent's PHPDoc says `list<string>`, which is
      * the shorthand form registerVite() also accepts; the associative form is the
-     * documented one and is what every v6 reference addon ships.
-     *
-     * @phpstan-ignore-next-line property.defaultValue
+     * documented one and is what every v6 reference addon ships. The PHPStan
+     * exception for the older annotation sits in phpstan.neon.
      */
     protected $vite = [
         'hotFile' => __DIR__.'/../resources/dist/hot',

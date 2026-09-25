@@ -37,3 +37,13 @@ parameters:
         - tests/Fakes/insights-table-metric.php
 
     treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # Older Statamic annotates AddonServiceProvider::$vite as list<string>,
+        # newer ones with the keyed shape. CI resolves the newer, the lock file
+        # the older; only the older needs the exception, hence silent when it
+        # does not match.
+        -
+            identifier: property.defaultValue
+            path: src/ServiceProvider.php
+            reportUnmatched: false
