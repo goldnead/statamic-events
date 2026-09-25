@@ -68,6 +68,15 @@ class Settings implements ProvidesSettings
     }
 
     /**
+     * The sidebar entry and tab, read by brand-context 1.15 and later. Same
+     * word as the addon's own sidebar entry.
+     */
+    public static function settingsTitle(): string
+    {
+        return (string) __('events::cp.nav');
+    }
+
+    /**
      * @return array<int, array{title: string, description: string, fields: array<int, array<string, mixed>>}>
      */
     public static function settingsGroups(): array

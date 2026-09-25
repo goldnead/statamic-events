@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [2.6.3] — 2026-09-25
+
+### Fixed
+
+- The settings entry names itself with `settingsTitle()` (brand-context 1.15), in German "Termine" like the addon's own sidebar entry. It read "Ereignisse" only because two other addons translated the name "Events" globally.
+
 ## [2.6.0] — 2026-09-22
 
 ### Added: a date can say where it is on a map, and how to get in
