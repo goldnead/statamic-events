@@ -260,6 +260,20 @@ class Blueprints
                             'instructions' => __('events::cp.section_tickets_instructions'),
                             'fields' => [
                                 [
+                                    'handle' => 'presale_starts_at',
+                                    'field' => [
+                                        // Shown in the event's zone like the
+                                        // two dates above, so "der Tag, an dem
+                                        // der Vorverkauf beginnt" is the day the
+                                        // venue's country means.
+                                        'type' => 'date',
+                                        'display' => __('events::cp.field_presale_starts_at'),
+                                        'instructions' => __('events::cp.field_presale_starts_at_instructions'),
+                                        'time_enabled' => true,
+                                        'timezone' => $timezone,
+                                    ],
+                                ],
+                                [
                                     'handle' => 'tickets_url',
                                     'field' => [
                                         'type' => 'text',

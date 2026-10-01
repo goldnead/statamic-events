@@ -98,7 +98,7 @@ author, no route to register.
 <a href="{{ events:feed_url }}">Subscribe to the whole calendar</a>
 ```
 
-From PHP, the same data comes through the `Events` facade; from another addon, through the four
+From PHP, the same data comes through the `Events` facade; from another addon, through the five
 domain events. Both are documented below.
 
 ---
@@ -108,7 +108,7 @@ domain events. Both are documented below.
 **Event** — title, slug, description, type, visibility, status, timezone.
 
 **Occurrence** — one date of an event: start, optional end, optional all-day flag, an optional
-timezone override, a venue and/or an online URL, and a status.
+timezone override, a venue and/or an online URL, an optional presale start, and a status.
 
 Two rules the addon enforces rather than suggests:
 
@@ -242,19 +242,20 @@ into the past (default 1), so a date that finished this morning does not vanish 
 | `Goldnead\Events\Events\OccurrenceScheduled` | A date is added |
 | `Goldnead\Events\Events\OccurrenceRescheduled` | A date moves. Carries `previousStartsAt` and `previousEndsAt`. |
 | `Goldnead\Events\Events\OccurrenceCancelled` | A date is called off. Carries the reason. |
+| `Goldnead\Events\Events\OccurrencePresaleChanged` | A date's presale start is set, moved or cleared. Carries `previousPresaleStartsAt`. |
 
 This addon fires; it does not orchestrate. Workflow building belongs in
-`statamic-automations`, which can trigger on all four.
+`statamic-automations`, which can trigger on all five.
 
 ## Optional siblings
 
 Bridged by `class_exists`, never as a Composer requirement:
 
-- **`goldnead/statamic-activity`** — records the four domain events into the ledger, with a dedupe
+- **`goldnead/statamic-activity`** — records the domain events into the ledger, with a dedupe
   key per fact. Switch off with `events.bridges.activity`. A failing ledger never fails the write
   that produced the fact: cancelling a concert has to succeed even when the addon next door is
   misconfigured.
-- **`goldnead/statamic-automations`** — can trigger on the four domain events with no work here.
+- **`goldnead/statamic-automations`** — can trigger on the domain events with no work here.
 - **`goldnead/statamic-notifications`** — groundwork for reminders, planned for v1.2.
 
 ## The facade

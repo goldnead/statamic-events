@@ -71,6 +71,8 @@ return [
     'section_tickets' => 'Tickets',
     'section_tickets_instructions' => 'Jeder Termin wird einzeln verkauft, darum steht der Link hier und nicht am Event.',
     'field_tickets_url' => 'Ticket-Link',
+    'field_presale_starts_at' => 'Vorverkauf ab',
+    'field_presale_starts_at_instructions' => 'Der Tag, an dem der Kartenverkauf beginnt. Benachrichtigungen und Kampagnen richten sich nach ihm.',
     'field_is_free' => 'Eintritt frei',
     'field_is_free_instructions' => 'Sag es, sonst liest sich ein fehlender Ticket-Link wie ein vergessener.',
     'field_online_url' => 'Online-URL',
@@ -78,6 +80,7 @@ return [
 
     'validation_needs_location' => 'Ein Datum braucht einen Veranstaltungsort oder eine Online-URL.',
     'validation_ends_before_starts' => 'Das Ende kann nicht vor dem Beginn liegen.',
+    'validation_presale_after_starts' => 'Der Vorverkauf kann nicht nach dem Termin beginnen.',
 
     'filter_any' => 'Alle',
     'filter_type' => 'Typ',
@@ -128,7 +131,7 @@ return [
     'empty_heading' => 'Termine, ihre Datumsangaben und ein Kalender-Feed zum Abonnieren.',
     'empty_create_description' => 'Ein Termin, so viele Datumsangaben wie nötig. Die Beschreibung wird einmal geschrieben.',
     'empty_docs_heading' => 'Dokumentation lesen',
-    'empty_docs_description' => 'Antlers-Tags, der ICS-Feed und die vier Domain-Events, auf die andere Addons hören können.',
+    'empty_docs_description' => 'Antlers-Tags, der ICS-Feed und die fünf Domain-Events, auf die andere Addons hören können.',
     'empty_dates_description' => 'Beginn, Ende und Ort. Alles Weitere steht schon am Termin.',
 
 ];

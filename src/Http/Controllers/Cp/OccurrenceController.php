@@ -78,6 +78,7 @@ class OccurrenceController extends Controller
                 'venue_longitude' => $model->venue_longitude,
                 'tickets_url' => $model->tickets_url,
                 'is_free' => (bool) $model->is_free,
+                'presale_starts_at' => $this->toFieldValue($model->presale_starts_at),
                 'online_url' => $model->online_url,
             ])
             ->submittingTo(cp_route('events.occurrences.update', ['occurrence' => $model->getKey()]));
@@ -146,6 +147,14 @@ class OccurrenceController extends Controller
                 'ends_at' => __('events::cp.validation_ends_before_starts'),
             ]);
         }
+
+        $presale = $attributes['presale_starts_at'];
+
+        if ($presale instanceof CarbonImmutable && $presale->greaterThan($start)) {
+            throw ValidationException::withMessages([
+                'presale_starts_at' => __('events::cp.validation_presale_after_starts'),
+            ]);
+        }
     }
 
     /**
@@ -212,6 +221,7 @@ class OccurrenceController extends Controller
             'venue_longitude' => $this->coordinate($values['venue_longitude'] ?? null),
             'tickets_url' => $values['tickets_url'] ?? null,
             'is_free' => (bool) ($values['is_free'] ?? false),
+            'presale_starts_at' => $this->fromFieldValue($values['presale_starts_at'] ?? null),
             'online_url' => $values['online_url'] ?? null,
         ];
     }

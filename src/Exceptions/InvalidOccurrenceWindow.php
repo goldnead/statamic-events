@@ -10,4 +10,9 @@ class InvalidOccurrenceWindow extends RuntimeException
     {
         return new self('An occurrence cannot end before it starts.');
     }
+
+    public static function presaleAfterItStarts(): self
+    {
+        return new self('A presale cannot open after the occurrence starts.');
+    }
 }

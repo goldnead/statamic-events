@@ -8,6 +8,7 @@ use Goldnead\Events\Casts\UtcDateTime;
 use Goldnead\Events\Database\Factories\OccurrenceFactory;
 use Goldnead\Events\Enums\OccurrenceStatus;
 use Goldnead\Events\Events\OccurrenceCancelled;
+use Goldnead\Events\Events\OccurrencePresaleChanged;
 use Goldnead\Events\Events\OccurrenceRescheduled;
 use Goldnead\Events\Events\OccurrenceScheduled;
 use Goldnead\Events\Exceptions\InvalidOccurrenceWindow;
@@ -39,6 +40,7 @@ use Illuminate\Support\Str;
  * @property string|null $venue_longitude
  * @property string|null $tickets_url
  * @property bool $is_free
+ * @property CarbonImmutable|null $presale_starts_at
  * @property string|null $timezone
  * @property OccurrenceStatus $status
  * @property CarbonImmutable|null $cancelled_at
@@ -91,6 +93,11 @@ class Occurrence extends Model
         return UtcDateTime::attribute();
     }
 
+    protected function presaleStartsAt(): Attribute
+    {
+        return UtcDateTime::attribute();
+    }
+
     /**
      * The factory lives in this package, not in the host application's
      * `Database\Factories` namespace, so Laravel's guess has to be corrected.
@@ -125,15 +132,35 @@ class Occurrence extends Model
 
             $occurrence->assertLocatable();
             $occurrence->assertOrdered();
+            $occurrence->assertPresaleOrdered();
         });
 
         static::updating(function (Occurrence $occurrence): void {
             $occurrence->assertLocatable();
             $occurrence->assertOrdered();
+            $occurrence->assertPresaleOrdered();
         });
 
         static::created(function (Occurrence $occurrence): void {
             OccurrenceScheduled::dispatch($occurrence);
+        });
+
+        /*
+         * A presale date is the one field besides the window that other addons
+         * time their own work against, so changing it is announced like moving
+         * the date is. The previous value is read before syncOriginal() runs,
+         * which performUpdate() calls after this hook fires; the test on the
+         * payload is what holds that ordering in place.
+         */
+        static::updated(function (Occurrence $occurrence): void {
+            if (! $occurrence->wasChanged('presale_starts_at')) {
+                return;
+            }
+
+            OccurrencePresaleChanged::dispatch(
+                $occurrence,
+                UtcDateTime::fromStorage($occurrence->getRawOriginal('presale_starts_at')),
+            );
         });
     }
 
@@ -276,6 +303,14 @@ class Occurrence extends Model
     {
         if ($this->ends_at !== null && $this->ends_at->lessThan($this->starts_at)) {
             throw InvalidOccurrenceWindow::endsBeforeItStarts();
+        }
+    }
+
+    /** A presale that opens after the date itself is a typo as well. */
+    protected function assertPresaleOrdered(): void
+    {
+        if ($this->presale_starts_at !== null && $this->presale_starts_at->greaterThan($this->starts_at)) {
+            throw InvalidOccurrenceWindow::presaleAfterItStarts();
         }
     }
 

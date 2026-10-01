@@ -6,6 +6,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [Unreleased]
+
+### Added: a date can say when its tickets go on sale
+
+`presale_starts_at`, nullable and UTC on disk like `starts_at`. A sold date has two instants that
+matter — when the room opens and when the box office does — and the second is what a presale mailing
+is timed against; "Der Vorverkauf hat gestartet" is only true from this moment on. Nullable because
+a date without a presale date is the normal case, not an error: a placeholder like `now()` would
+fire a mailing on a day nobody chose.
+
+In the Control Panel the field sits in the Tickets section of the date form, shown in the event's
+timezone like the two dates above. A presale after the date itself is refused, as a field error on
+the form and as a model invariant — the controller check is the friendly path, not the authority.
+
+Setting, moving or clearing the date fires `OccurrencePresaleChanged`, which carries
+`previousPresaleStartsAt` because "the presale begins later now" is only worth sending with the old
+day attached. Creation fires nothing new: a new date announces itself through `OccurrenceScheduled`,
+presale date included, and a second event for the same row would let a listener fire twice on one
+write. `statamic-marketing` can listen from here.
+
 ## [2.6.3] — 2026-09-25
 
 ### Fixed

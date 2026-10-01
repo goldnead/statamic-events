@@ -71,6 +71,8 @@ return [
     'section_tickets' => 'Tickets',
     'section_tickets_instructions' => 'Each date sells separately, so the link belongs here rather than on the event.',
     'field_tickets_url' => 'Ticket link',
+    'field_presale_starts_at' => 'Presale starts',
+    'field_presale_starts_at_instructions' => 'The day ticket sales begin. Notifications and campaigns are timed against it.',
     'field_is_free' => 'Admission free',
     'field_is_free_instructions' => 'Say so, otherwise a missing ticket link reads as a forgotten one.',
     'field_online_url' => 'Online URL',
@@ -78,6 +80,7 @@ return [
 
     'validation_needs_location' => 'A date needs a venue or an online URL.',
     'validation_ends_before_starts' => 'The end cannot be before the start.',
+    'validation_presale_after_starts' => 'Presale cannot start after the date itself.',
 
     'filter_any' => 'Any',
     'filter_type' => 'Type',
@@ -128,7 +131,7 @@ return [
     'empty_heading' => 'Events, their dates, and a calendar feed people can subscribe to.',
     'empty_create_description' => 'One event, as many dates as it has. The description is written once.',
     'empty_docs_heading' => 'Read the documentation',
-    'empty_docs_description' => 'Antlers tags, the ICS feed and the four domain events other addons can listen to.',
+    'empty_docs_description' => 'Antlers tags, the ICS feed and the five domain events other addons can listen to.',
     'empty_dates_description' => 'A start, an end and a place. Everything else is already on the event.',
 
 ];
