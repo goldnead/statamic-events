@@ -8,6 +8,8 @@ config keys and facade methods are part of the public API from the first release
 
 ## [Unreleased]
 
+## [2.7.0] — 2026-10-01
+
 ### Added: a date can say when its tickets go on sale
 
 `presale_starts_at`, nullable and UTC on disk like `starts_at`. A sold date has two instants that
