@@ -59,6 +59,19 @@ class Blueprints
                                         'display' => __('events::cp.field_description'),
                                     ],
                                 ],
+                                [
+                                    'handle' => 'program',
+                                    'field' => [
+                                        'type' => 'grid',
+                                        'display' => __('events::cp.field_program'),
+                                        'instructions' => __('events::cp.field_program_instructions'),
+                                        'add_row' => __('events::cp.field_program_add'),
+                                        'fields' => [
+                                            ['handle' => 'time', 'field' => ['type' => 'time', 'display' => __('events::cp.field_program_time'), 'width' => 33]],
+                                            ['handle' => 'title', 'field' => ['type' => 'text', 'display' => __('events::cp.field_program_title'), 'width' => 67, 'validate' => ['required', 'max:255']]],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ],

@@ -58,6 +58,7 @@ class ServiceProvider extends AddonServiceProvider
         $this->app->alias(EventManager::class, 'statamic-events');
 
         $this->app->singleton(Ics::class);
+        $this->app->singleton(Rsvps::class);
 
         // Registered against the resolving translator rather than in boot: the
         // nav and permission labels are built before bootAddon() runs.

@@ -8,6 +8,16 @@ config keys and facade methods are part of the public API from the first release
 
 ## [Unreleased]
 
+### Added: RSVP and a programme per event
+
+- `events.rsvp.enabled`, off by default; nothing changes for installs that leave it off.
+- `event_rsvps` table (unique per event and account), `Rsvps` service (`toggle`, `set`, `remove`,
+  `list`, `counts`, `statusFor`, `eraseFor`), `RsvpPolicy`, and `{{ events:rsvp event="..." }}`.
+  Only signed-in accounts answer; only `manage events` sees names; everyone else gets numbers.
+- `events.program` (JSON), a time and title grid in the event form.
+- No accounts contributor: this addon does not know `statamic-accounts`, so `composer.json` suggests
+  it and `Rsvps::eraseFor()` is the call to make on deletion.
+
 ## [2.7.0] — 2026-10-01
 
 ### Added: a date can say when its tickets go on sale
