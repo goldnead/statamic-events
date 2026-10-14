@@ -247,6 +247,30 @@ into the past (default 1), so a date that finished this morning does not vanish 
 This addon fires; it does not orchestrate. Workflow building belongs in
 `statamic-automations`, which can trigger on all five.
 
+## RSVP and programme
+
+Off by default: set `events.rsvp.enabled` to `true`. One answer per account and event — `going`,
+`interested` or `not_going`.
+
+```php
+$rsvps = app(\Goldnead\Events\Rsvps::class);
+$rsvps->toggle($event, $user);          // going, and again to take it back
+$rsvps->set($event, $user, 'interested');
+$rsvps->remove($event, $user);
+$rsvps->counts($event);                 // numbers, public
+$rsvps->list($event, $viewer);          // names, only with `manage events`
+```
+
+Only signed-in accounts may answer, and only for a published event that is not private; anything
+else throws `AuthorizationException`. `{{ events:rsvp event="<uuid>" }}` gives `enabled`,
+`can_respond`, `status` (the visitor's own), `going`, `interested` and `not_going`.
+
+The addon knows nothing about `statamic-accounts`, so there is no erasure contributor. When an
+account is deleted, call `Rsvps::eraseFor($user)` from yours.
+
+Every event also has an optional `program`, a list of `time` and `title`, edited as a grid in the
+Control Panel and returned as `$event->program`.
+
 ## Optional siblings
 
 Bridged by `class_exists`, never as a Composer requirement:
@@ -276,7 +300,7 @@ one place.
 
 ## Not in v1
 
-RSVP, capacity, waiting lists, reminders, access gating, attendance tracking, recurrence-rule
+Capacity, waiting lists, reminders, access gating, attendance tracking, recurrence-rule
 generation, course and community linkage.
 
 Deliberately: RSVP and waiting lists pull identity, notifications and entitlements into the first

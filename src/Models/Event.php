@@ -31,6 +31,7 @@ use Statamic\Facades\User;
  * @property string $title
  * @property string $slug
  * @property string|null $description
+ * @property list<array{time: string|null, title: string}> $program
  * @property string $type
  * @property Visibility $visibility
  * @property EventStatus $status
@@ -51,7 +52,31 @@ class Event extends Model
     protected $casts = [
         'visibility' => Visibility::class,
         'status' => EventStatus::class,
+        'program' => 'array',
     ];
+
+    /**
+     * The running order as a clean list of `time` and `title`.
+     *
+     * Grid rows come back from the publish form with an id and empty rows; only
+     * rows with a title are a programme item, and nothing else is kept.
+     */
+    protected function program(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value ? json_decode($value, true) : [],
+            set: fn ($value) => json_encode(collect($value ?? [])
+                ->filter(fn ($row) => filled($row['title'] ?? null))
+                ->map(fn ($row) => ['time' => filled($row['time'] ?? null) ? (string) $row['time'] : null, 'title' => (string) $row['title']])
+                ->values()->all()),
+        );
+    }
+
+    /** @return HasMany<Rsvp, $this> */
+    public function rsvps(): HasMany
+    {
+        return $this->hasMany(Rsvp::class);
+    }
 
     /** Stored and read as UTC. See src/Casts/UtcDateTime.php. */
     protected function publishedAt(): Attribute

@@ -35,6 +35,7 @@
         "pestphp/pest-plugin-laravel": "^3.0|^4.0|^5.0"
     },
     "suggest": {
+        "goldnead/statamic-accounts": "Erasing an account should call Rsvps::eraseFor() so its RSVPs go with it; this addon ships no contributor of its own.",
         "goldnead/statamic-activity": "Records occurrence scheduling, rescheduling and cancellation into the activity ledger.",
         "goldnead/statamic-automations": "Lets automations trigger on the four domain events this addon emits.",
         "goldnead/statamic-insights": "Puts published events, the dates in a period and the cancellations on the Insights dashboard, split by type and status.",

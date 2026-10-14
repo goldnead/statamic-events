@@ -82,6 +82,11 @@ return [
     |
     */
 
+    'rsvp' => [
+        // Off: the addon behaves exactly as before and the tag reports nothing.
+        'enabled' => false,
+    ],
+
     'bridges' => [
         'activity' => true,
     ],

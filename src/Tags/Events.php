@@ -5,6 +5,9 @@ namespace Goldnead\Events\Tags;
 use Goldnead\Events\EventManager;
 use Goldnead\Events\Models\Event;
 use Goldnead\Events\Models\Occurrence;
+use Goldnead\Events\Rsvps;
+use Goldnead\Events\Support\RsvpPolicy;
+use Statamic\Facades\User;
 use Statamic\Tags\Tags;
 
 /**
@@ -20,6 +23,7 @@ use Statamic\Tags\Tags;
  *   {{ events:next }}               the next attendable date, or nothing
  *   {{ events:count }}              how many dates match
  *   {{ events:feed_url }}           the subscribable calendar URL
+ *   {{ events:rsvp }}               RSVP counts and the visitor's own answer
  *
  * Every one of them reads through the `Events` manager rather than building its
  * own query, which is what keeps the visibility rules in one place. A tag that
@@ -92,6 +96,29 @@ class Events extends Tags
         $type = (string) $this->params->get('type', '');
 
         return route('statamic.events.feed').($type === '' ? '' : '?type='.urlencode($type));
+    }
+
+    /**
+     * {{ events:rsvp event="<uuid>" }} — counts and the visitor's own answer.
+     *
+     * One row: `enabled`, `going`, `interested`, `not_going`, `status` (null for
+     * guests or no answer) and `can_respond`. Never names anybody. With RSVP
+     * switched off, or an event the visitor may not read, `enabled` is false and
+     * the rest is empty.
+     */
+    public function rsvp(): array
+    {
+        $event = Event::where('uuid', (string) $this->params->get('event', ''))->first();
+        $user = User::current();
+        $user = $user instanceof \Statamic\Auth\User ? $user : null;
+
+        if (! RsvpPolicy::enabled() || ! $event || ! $event->isPubliclyReadable()) {
+            return [['enabled' => false, 'can_respond' => false, 'status' => null, 'going' => 0, 'interested' => 0, 'not_going' => 0]];
+        }
+
+        $rsvps = app(Rsvps::class);
+
+        return [['enabled' => true, 'can_respond' => RsvpPolicy::canRespond($user, $event), 'status' => $rsvps->statusFor($event, $user)?->value] + $rsvps->counts($event)];
     }
 
     /** {{ events:ics_url occurrence="<uuid>" }} — the per-date download. */
