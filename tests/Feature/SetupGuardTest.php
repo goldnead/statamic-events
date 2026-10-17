@@ -27,7 +27,8 @@ function setupGuardUser()
 
 function dropEventTables(): void
 {
-    // Dates first: the child table carries the foreign key.
+    // Children first: they carry the foreign keys (MySQL refuses to drop `events` otherwise).
+    Schema::dropIfExists('event_rsvps');
     Schema::dropIfExists('event_occurrences');
     Schema::dropIfExists('events');
 }
