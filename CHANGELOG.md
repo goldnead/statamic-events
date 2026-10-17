@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## [2.9.0] — 2026-10-17
+
+### Changed
+
+- Settings: the addon now declares `settingsNavParent()` (`[section, name]` of its own Control Panel navigation entry). With statamic-brand-context 1.16 or newer its settings show as the sub-item "Einstellungen" under that entry; addons without a navigation of their own share one "Addon-Suite" page under Settings. Older brand-context versions ignore the method and keep the previous layout.
+
+### Upgrading
+
+- No migration, no new config key.
+
 ## [2.8.0] — 2026-10-15
 
 ### Added: RSVP and a programme per event
