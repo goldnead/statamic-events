@@ -1,8 +1,10 @@
 <?php
 
+use Goldnead\BrandContext\Http\Middleware\GuardSetup;
 use Goldnead\Events\Http\Controllers\Cp\EventController;
 use Goldnead\Events\Http\Controllers\Cp\OccurrenceActionController;
 use Goldnead\Events\Http\Controllers\Cp\OccurrenceController;
+use Goldnead\Events\Support\Setup;
 use Illuminate\Support\Facades\Route;
 
 // The kill switch has to bite here as well as on the nav item. Hiding the entry
@@ -22,7 +24,12 @@ if (! config('events.cp.enabled', true)) {
 | See tests/Feature/RouteParameterCollisionTest.php.
 */
 
-Route::prefix('events')->name('events.')->group(function () {
+// The detail routes below run the setup guard before route-model binding and
+// before the controller's own queries. Same tables and title as the listing's
+// Setup::guard() in EventController::index().
+$guard = GuardSetup::using(Setup::class, 'events::cp.title', 'events', 'event_occurrences');
+
+Route::prefix('events')->name('events.')->group(function () use ($guard) {
     Route::get('/', [EventController::class, 'index'])->name('index');
     Route::get('create', [EventController::class, 'create'])->name('create');
     Route::post('/', [EventController::class, 'store'])->name('store');
@@ -31,13 +38,13 @@ Route::prefix('events')->name('events.')->group(function () {
     // neither can swallow the other.
     // No `{event}/edit`. The detail screen is the form, so a second screen for
     // the same blueprint would be a second truth about the same record.
-    Route::get('{event}', [EventController::class, 'show'])->name('show')->whereNumber('event');
-    Route::patch('{event}', [EventController::class, 'update'])->name('update')->whereNumber('event');
-    Route::delete('{event}', [EventController::class, 'destroy'])->name('destroy')->whereNumber('event');
+    Route::get('{event}', [EventController::class, 'show'])->name('show')->whereNumber('event')->middleware([$guard]);
+    Route::patch('{event}', [EventController::class, 'update'])->name('update')->whereNumber('event')->middleware([$guard]);
+    Route::delete('{event}', [EventController::class, 'destroy'])->name('destroy')->whereNumber('event')->middleware([$guard]);
 
-    Route::prefix('{event}/occurrences')->name('occurrences.')->group(function () {
-        Route::get('create', [OccurrenceController::class, 'create'])->name('create')->whereNumber('event');
-        Route::post('/', [OccurrenceController::class, 'store'])->name('store')->whereNumber('event');
+    Route::prefix('{event}/occurrences')->name('occurrences.')->group(function () use ($guard) {
+        Route::get('create', [OccurrenceController::class, 'create'])->name('create')->whereNumber('event')->middleware([$guard]);
+        Route::post('/', [OccurrenceController::class, 'store'])->name('store')->whereNumber('event')->middleware([$guard]);
     });
 
     /*
@@ -59,8 +66,8 @@ Route::prefix('events')->name('events.')->group(function () {
     // Editing a date does not need its event in the path: the row knows which
     // event it belongs to, and a URL that carries both invites the two halves to
     // disagree.
-    Route::prefix('occurrences/{occurrence}')->name('occurrences.')->group(function () {
-        Route::get('edit', [OccurrenceController::class, 'edit'])->name('edit')->whereNumber('occurrence');
-        Route::patch('/', [OccurrenceController::class, 'update'])->name('update')->whereNumber('occurrence');
+    Route::prefix('occurrences/{occurrence}')->name('occurrences.')->group(function () use ($guard) {
+        Route::get('edit', [OccurrenceController::class, 'edit'])->name('edit')->whereNumber('occurrence')->middleware([$guard]);
+        Route::patch('/', [OccurrenceController::class, 'update'])->name('update')->whereNumber('occurrence')->middleware([$guard]);
     });
 });
