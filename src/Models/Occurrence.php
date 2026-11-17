@@ -128,7 +128,7 @@ class Occurrence extends Model
     {
         static::creating(function (Occurrence $occurrence): void {
             $occurrence->uuid ??= (string) Str::uuid();
-            $occurrence->status ??= OccurrenceStatus::Scheduled->value;
+            $occurrence->status ??= OccurrenceStatus::Scheduled;
 
             $occurrence->assertLocatable();
             $occurrence->assertOrdered();
