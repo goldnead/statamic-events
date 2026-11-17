@@ -100,7 +100,7 @@ class Event extends Model
             $event->slug = $event->slug ?: Str::slug($event->title);
             $event->type ??= 'other';
             $event->visibility ??= config('events.defaults.visibility', 'public');
-            $event->status ??= EventStatus::Draft->value;
+            $event->status ??= EventStatus::Draft;
             // **Ohne den Benutzer**, und das ist der Unterschied zwischen
             // einem Formular-Default und einem harten Rueckfall.
             //
