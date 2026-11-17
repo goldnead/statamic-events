@@ -96,3 +96,47 @@ it('still renders the listing on a migrated install', function () {
 
     expect($page['component'])->toBe('events::Events/Index');
 });
+
+function setupGuardManager()
+{
+    $handle = 'role-'.Str::random(8);
+
+    Role::make($handle)->addPermission(['access cp', 'view events', 'manage events'])->save();
+
+    return tap(User::make()->email(Str::random(8).'@example.test')->assignRole($handle))->save();
+}
+
+it('shows the setup screen on an event detail page when its tables are missing', function () {
+    dropEventTables();
+
+    $page = $this->actingAs(setupGuardManager())
+        ->get(cp_route('events.show', 1))
+        ->assertOk()
+        ->viewData('page');
+
+    expect($page['component'])->toBe('events::SetupRequired');
+});
+
+it('shows the setup screen on an occurrence edit page when its tables are missing', function () {
+    dropEventTables();
+
+    $page = $this->actingAs(setupGuardManager())
+        ->get(cp_route('events.occurrences.edit', 1))
+        ->assertOk()
+        ->viewData('page');
+
+    expect($page['component'])->toBe('events::SetupRequired');
+});
+
+it('sends a stranger to the login on the detail pages and never shows the setup screen', function () {
+    dropEventTables();
+
+    $this->get(cp_route('events.show', 1))->assertRedirect();
+    $this->get(cp_route('events.occurrences.edit', 1))->assertRedirect();
+});
+
+it('still answers 404 for an unknown event on a migrated install', function () {
+    $this->actingAs(setupGuardManager())
+        ->get(cp_route('events.show', 999))
+        ->assertNotFound();
+});

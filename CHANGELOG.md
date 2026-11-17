@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Tag names, Antlers tag parameters,
 config keys and facade methods are part of the public API from the first release.
 
+## Unreleased
+
+### Fixed
+
+- Control Panel: the detail pages (event show, update and delete, occurrence create, store, edit and update) show the same setup screen as the listing when the addon's tables are missing, instead of a query error (HTTP 500). They carry the `brand.setup-guard` middleware of statamic-brand-context 1.27, which runs before the controller's queries.
+
+### Upgrading
+
+- Requires statamic-brand-context 1.27 or newer. No migration, no new config key.
+
 ## [2.9.0] — 2026-10-17
 
 ### Changed
