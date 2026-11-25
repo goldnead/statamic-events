@@ -39,9 +39,24 @@ class Rsvps
     {
         $this->authorize($event, $user);
 
+        if (! $status instanceof RsvpStatus) {
+            $resolved = RsvpStatus::tryFrom($status);
+
+            if ($resolved === null) {
+                // Say what was wrong and what is allowed, instead of a bare ValueError from the enum.
+                throw new \InvalidArgumentException(sprintf(
+                    "Unknown RSVP status '%s'. Allowed: %s.",
+                    $status,
+                    implode(', ', array_map(fn (RsvpStatus $case) => $case->value, RsvpStatus::cases())),
+                ));
+            }
+
+            $status = $resolved;
+        }
+
         return Rsvp::updateOrCreate(
             ['event_id' => $event->getKey(), 'user_id' => (string) $user->getAuthIdentifier()],
-            ['brand_id' => $event->brand_id, 'status' => RsvpStatus::from($status instanceof RsvpStatus ? $status->value : $status)],
+            ['brand_id' => $event->brand_id, 'status' => $status],
         );
     }
 

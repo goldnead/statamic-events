@@ -97,7 +97,13 @@ class EventController extends Controller
 
         $values = PublishForm::make(Blueprints::event())->submit($request->all());
 
-        $event = Event::create($this->attributes($values));
+        // An event created straight as published goes through publish() like a
+        // later transition does: it is the only place that stamps published_at,
+        // which Insights counts on.
+        $event = new Event($this->attributes($values));
+        $event->status === EventStatus::Published
+            ? $event->publish()
+            : $event->save();
 
         // `redirect` is the key core's PublishForm reads off the save response
         // (ui/Publish/Form.vue). Returning a 302 instead makes the XHR follow it
