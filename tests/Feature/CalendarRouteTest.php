@@ -4,6 +4,7 @@ use Carbon\CarbonImmutable;
 use Goldnead\Events\Models\Event;
 use Goldnead\Events\Models\Occurrence;
 use Goldnead\Events\Support\Ics;
+use Illuminate\Support\Facades\Log;
 
 function occurrenceUrl(Occurrence $occurrence): string
 {
@@ -111,8 +112,33 @@ it('caps the feed so an unauthenticated endpoint cannot be made expensive', func
     expect(substr_count($body, 'BEGIN:VEVENT'))->toBe(3);
 });
 
+it('logs a notice when the feed is cut at the cap', function () {
+    config()->set('events.feeds.max_occurrences', 3);
+    Log::spy();
+
+    $event = Event::factory()->published()->create();
+    Occurrence::factory()->count(10)->for($event)->create();
+
+    $this->get(route('statamic.events.feed'))->assertOk();
+
+    Log::shouldHaveReceived('notice')->once();
+});
+
 it('404s the feed when it is switched off', function () {
     config()->set('events.feeds.enabled', false);
 
     $this->get(route('statamic.events.feed'))->assertNotFound();
+});
+
+it('does not log a cut when the feed holds exactly the cap', function () {
+    config()->set('events.feeds.max_occurrences', 3);
+    Log::spy();
+
+    $event = Event::factory()->published()->create();
+    Occurrence::factory()->count(3)->for($event)->create();
+
+    $body = $this->get(route('statamic.events.feed'))->assertOk()->getContent();
+
+    expect(substr_count($body, 'BEGIN:VEVENT'))->toBe(3);
+    Log::shouldNotHaveReceived('notice');
 });

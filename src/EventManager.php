@@ -7,6 +7,8 @@ use Goldnead\Events\Models\Event;
 use Goldnead\Events\Models\Occurrence;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The addon's public entry point, behind the `Events` facade.
@@ -96,13 +98,31 @@ class EventManager
     {
         $pastDays = max(0, (int) config('events.feeds.past_days', 1));
 
-        return $this->occurrenceQuery(array_merge($filters, [
+        $limit = max(1, (int) config('events.feeds.max_occurrences', 500));
+
+        // One more than the cap: only then is the feed really cut, not just full.
+        $occurrences = $this->occurrenceQuery(array_merge($filters, [
             'listable' => true,
             'from' => CarbonImmutable::now()->subDays($pastDays),
             'include_cancelled' => true,
             'order' => 'asc',
-            'limit' => (int) config('events.feeds.max_occurrences', 500),
+            'limit' => $limit + 1,
         ]))->get();
+
+        // A feed cut at the cap looks complete to the client that reads it, so
+        // the cut is logged, with the cap that caused it. At most once an hour:
+        // the feed is public and every subscriber polls it.
+        if ($occurrences->count() > $limit) {
+            $occurrences = $occurrences->take($limit)->values();
+
+            if (Cache::add('events.feed-cap-notice', 1, 3600)) {
+                Log::notice('Events feed reached its occurrence cap; later dates are not included.', [
+                    'limit' => $limit,
+                ]);
+            }
+        }
+
+        return $occurrences;
     }
 
     /**

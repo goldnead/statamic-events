@@ -72,9 +72,19 @@ class CancelOccurrence extends Action
     public function run($items, $values)
     {
         // The model no-ops on an already cancelled date, so a selection that
-        // happens to include one does not emit a second cancellation.
-        $items->each->cancel();
+        // happens to include one does not emit a second cancellation. The
+        // message counts what was really cancelled, not the selection.
+        $cancelled = 0;
 
-        return trans_choice('events::cp.bulk_cancelled', $items->count());
+        foreach ($items as $item) {
+            if ($item->isCancelled()) {
+                continue;
+            }
+
+            $item->cancel();
+            $cancelled++;
+        }
+
+        return trans_choice('events::cp.bulk_cancelled', $cancelled);
     }
 }

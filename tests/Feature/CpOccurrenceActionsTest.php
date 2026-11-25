@@ -2,6 +2,7 @@
 
 use Carbon\CarbonImmutable;
 use Goldnead\BrandContext\Facades\BrandContext;
+use Goldnead\Events\Actions\DeleteOccurrence;
 use Goldnead\Events\Enums\OccurrenceStatus;
 use Goldnead\Events\Events\OccurrenceCancelled;
 use Goldnead\Events\Models\Event;
@@ -147,6 +148,44 @@ it('deletes every checked date', function () {
     expect($response->json('message'))->toBe(trans_choice('events::cp.bulk_deleted', 2))
         ->and($response->json())->not->toHaveKey('redirect')
         ->and(Occurrence::query()->pluck('id')->all())->toBe([$kept->getKey()]);
+});
+
+it('counts only the dates it actually cancelled, not the selection', function () {
+    $event = Event::factory()->create();
+    $alreadyCancelled = occurrenceOn($event);
+    $alreadyCancelled->cancel();
+    $open = occurrenceOn($event, '2026-07-22 17:00');
+
+    EventFacade::fake([OccurrenceCancelled::class]);
+
+    $response = $this->actingAs(actor())
+        ->post(cp_route('events.occurrences.actions.run'), [
+            'action' => 'events_cancel_occurrence',
+            'selections' => [$alreadyCancelled->getKey(), $open->getKey()],
+            'values' => [],
+            'context' => ['view' => 'list'],
+        ])
+        ->assertOk();
+
+    expect($response->json('message'))->toBe(trans_choice('events::cp.bulk_cancelled', 1))
+        ->and($response->json('message'))->not->toBe(trans_choice('events::cp.bulk_cancelled', 2));
+
+    EventFacade::assertDispatchedTimes(OccurrenceCancelled::class, 1);
+});
+
+it('counts only the dates it actually deleted, not the selection', function () {
+    $event = Event::factory()->create();
+    $gone = occurrenceOn($event);
+    $present = occurrenceOn($event, '2026-07-22 17:00');
+
+    // The row is removed behind the action's back, while the instance it was
+    // handed still says it exists.
+    Occurrence::query()->whereKey($gone->getKey())->delete();
+
+    $message = (new DeleteOccurrence)->run(collect([$gone, $present]), []);
+
+    expect($message)->toBe(trans_choice('events::cp.bulk_deleted', 1))
+        ->and(Occurrence::query()->whereKey($present->getKey())->exists())->toBeFalse();
 });
 
 it('refuses a selection the brand scope does not reach', function () {
