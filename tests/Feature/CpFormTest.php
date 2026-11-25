@@ -77,8 +77,10 @@ it('goes through publish() when the form raises the status, so published_at is s
 });
 
 it('stamps published_at when an event is created already published', function () {
-    // create() with status=published skipped publish(): EventPublished fired,
-    // but published_at stayed empty, so Insights (which counts on it) missed the event.
+    // create() with status=published skipped publish(), so published_at stayed
+    // empty and Insights (which counts on it) missed the event. (EventPublished
+    // does not fire for a freshly inserted row either way: its saved hook
+    // reacts to a changed status, which an insert is not. That is a separate question.)
     $this->actingAs(manager())->post(cp_route('events.store'), [
         'title' => 'Sofort veroeffentlicht',
         'slug' => 'sofort-veroeffentlicht',
