@@ -53,8 +53,20 @@ class DeleteOccurrence extends Action
     /** @see CancelOccurrence::run() for why there is no `redirect()` beside this. */
     public function run($items, $values)
     {
-        $items->each->delete();
+        // Counts the rows that were really there to delete, not the selection:
+        // a date removed between loading the list and this run must not be
+        // reported as deleted by this action.
+        $deleted = 0;
 
-        return trans_choice('events::cp.bulk_deleted', $items->count());
+        foreach ($items as $item) {
+            if (! $item->newQuery()->whereKey($item->getKey())->exists()) {
+                continue;
+            }
+
+            $item->delete();
+            $deleted++;
+        }
+
+        return trans_choice('events::cp.bulk_deleted', $deleted);
     }
 }
