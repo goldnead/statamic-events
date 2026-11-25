@@ -129,3 +129,16 @@ it('404s the feed when it is switched off', function () {
 
     $this->get(route('statamic.events.feed'))->assertNotFound();
 });
+
+it('does not log a cut when the feed holds exactly the cap', function () {
+    config()->set('events.feeds.max_occurrences', 3);
+    Log::spy();
+
+    $event = Event::factory()->published()->create();
+    Occurrence::factory()->count(3)->for($event)->create();
+
+    $body = $this->get(route('statamic.events.feed'))->assertOk()->getContent();
+
+    expect(substr_count($body, 'BEGIN:VEVENT'))->toBe(3);
+    Log::shouldNotHaveReceived('notice');
+});
