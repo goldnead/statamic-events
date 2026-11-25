@@ -11,6 +11,7 @@ use Goldnead\Events\Models\Occurrence;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Writes this addon's domain events into `statamic-activity`'s ledger, if that
@@ -193,6 +194,20 @@ class ActivityBridge
                 'properties' => array_filter($properties, fn ($value) => $value !== null),
             ]);
         } catch (\Throwable $exception) {
+            // report() alone carries no hint which entry was lost. The warning
+            // sits in its own guard: a broken log channel must not turn a
+            // swallowed ledger error back into a failed write.
+            try {
+                Log::warning('events: the activity entry could not be recorded', [
+                    'activity' => $type,
+                    'dedupe_key' => $dedupeKey,
+                    'subject' => $subject::class.'#'.$subject->getKey(),
+                    'exception' => $exception::class,
+                ]);
+            } catch (\Throwable) {
+                // Nothing left to do: report() below still runs.
+            }
+
             report($exception);
         }
     }

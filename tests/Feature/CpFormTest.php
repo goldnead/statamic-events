@@ -76,6 +76,26 @@ it('goes through publish() when the form raises the status, so published_at is s
     EventFacade::assertDispatchedTimes(EventPublished::class, 1);
 });
 
+it('stamps published_at when an event is created already published', function () {
+    // create() with status=published skipped publish(), so published_at stayed
+    // empty and Insights (which counts on it) missed the event. (EventPublished
+    // does not fire for a freshly inserted row either way: its saved hook
+    // reacts to a changed status, which an insert is not. That is a separate question.)
+    $this->actingAs(manager())->post(cp_route('events.store'), [
+        'title' => 'Sofort veroeffentlicht',
+        'slug' => 'sofort-veroeffentlicht',
+        'type' => 'workshop',
+        'status' => 'published',
+        'visibility' => 'public',
+        'timezone' => 'Europe/Berlin',
+    ])->assertOk();
+
+    $event = Event::query()->firstOrFail();
+
+    expect($event->status)->toBe(EventStatus::Published)
+        ->and($event->published_at)->not->toBeNull();
+});
+
 it('never lets a blueprint value reach brand_id', function () {
     // The models are `$guarded = []`, so a mass assign of whatever the form
     // carried would let a crafted field decide who can see the row.

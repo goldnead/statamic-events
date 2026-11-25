@@ -59,7 +59,8 @@ it('keeps one answer per account and event', function () {
 it('rejects an unknown status', function () {
     $event = Event::factory()->published()->create();
 
-    expect(fn () => app(Rsvps::class)->set($event, rsvpUser('a'), 'maybe'))->toThrow(ValueError::class);
+    expect(fn () => app(Rsvps::class)->set($event, rsvpUser('a'), 'maybe'))
+        ->toThrow(InvalidArgumentException::class, "Unknown RSVP status 'maybe'");
 });
 
 it('removes an answer', function () {

@@ -5,6 +5,7 @@ use Goldnead\Events\Bridges\ActivityBridge;
 use Goldnead\Events\Models\Event;
 use Goldnead\Events\Models\Occurrence;
 use Goldnead\Events\ServiceProvider;
+use Illuminate\Support\Facades\Log;
 
 /*
  * statamic-activity is a `suggest`, never a requirement — a concert calendar on
@@ -129,6 +130,24 @@ it('lets a cancellation succeed even when the ledger throws', function () {
     $occurrence->cancel('Storm damage');
 
     expect($occurrence->fresh()->isCancelled())->toBeTrue();
+});
+
+it('says which activity entry failed when the ledger throws', function () {
+    ActivityBridge::attach(app());
+
+    Activity::$throws = new RuntimeException('ledger is misconfigured');
+    Log::spy();
+
+    $occurrence = Occurrence::factory()->create();
+    $occurrence->cancel('Storm damage');
+
+    // The bare report() carries no hint which event or entry was lost; the
+    // warning names the activity type, the dedupe key and the exception class.
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn ($message, $context = []) => str_contains($message, 'activity')
+            && str_contains((string) ($context['dedupe_key'] ?? ''), $occurrence->uuid)
+            && ($context['exception'] ?? null) === RuntimeException::class)
+        ->atLeast()->once();
 });
 
 it('names no sibling addon as a Composer requirement', function () {
